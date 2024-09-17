@@ -8,6 +8,12 @@ We introduce a novel diffusion framework that unifies various image generation t
 
 ## Results
 
-![overall](./imgs/overall.pdf)
 
+![overall](imgs/overall.jpg)
 
+## Plan
+
+ - [x] Technical Report
+ - [ ] Model
+ - [ ] Code
+ - [ ] Data
