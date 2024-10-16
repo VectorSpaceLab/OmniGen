@@ -12,6 +12,61 @@ We introduce a novel diffusion framework that unifies various image generation t
 
 ![overall](imgs/overall.jpg)
 
+## Generate Images
+
+### Diffusers
+TODO
+
+### OmniGen
+Install:
+```bash
+git clone https://github.com/staoxiao/OmniGen.git
+cd OmniGen
+pip install -e .
+```
+
+```python
+from OmniGen import OmniGenPipeline
+
+pipe = OmniGenPipeline.from_pretrained("/share/shitao/projects/OmniGen/OmniGenv1")
+
+# Text to Image
+images = pipe(
+    prompt="A woman holds a bouquet of flowers and faces the camera", 
+    height=1024, 
+    width=1024, 
+    guidance_scale=5
+    )
+images[0].save("t2i.png")
+
+# Multi-modal to Image
+# In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
+# You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
+images = pipe(
+    prompt="Following the human pose.", 
+    input_images=["/share/shitao/projects/DiffusionGPT/data/cases/entity_imgs/yifei2.jpg"], 
+    height=1024, 
+    width=1024,
+    guidance_scale=3, 
+    img_guidance_scale=1.6)
+images[0].save("ti2i.png")
+
+images = pipe(
+    prompt="A woman is sitting at the dining table, holding a burger in his hand. The woman is <img><|image_1|></img>.", 
+    input_images=[["/share/shitao/projects/DiffusionGPT/data/cases/entity_imgs/yifei2.jpg"]], 
+    height=1024, 
+    width=1024,
+    guidance_scale=3, 
+    img_guidance_scale=1.6)
+images[0].save("tii2i.png")
+
+```
+
+
+
+## Fine-tuning
+
+
 
 ## Plan
 
