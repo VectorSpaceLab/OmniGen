@@ -18,5 +18,6 @@ setup(
         'transformers>=4.41.0',
         'datasets',
         'accelerate>=0.20.1',
+        'diffusers>=0.30.3'
     ],
 )

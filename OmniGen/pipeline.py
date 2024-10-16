@@ -5,11 +5,8 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from PIL import Image
 import numpy as np
 import torch
-from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5TokenizerFast
-
+from huggingface_hub import snapshot_download
 from diffusers.models import AutoencoderKL
-from OmniGen import OmniGen, OmniGenProcessor, OmniGenScheduler
-
 from diffusers.utils import (
     USE_PEFT_BACKEND,
     is_torch_xla_available,
@@ -18,6 +15,9 @@ from diffusers.utils import (
     scale_lora_layers,
     unscale_lora_layers,
 )
+
+from OmniGen import OmniGen, OmniGenProcessor, OmniGenScheduler
+
 
 logger = logging.get_logger(__name__) 
 
@@ -59,10 +59,11 @@ class OmniGenPipeline:
     def from_pretrained(cls, model_name):
         if not os.path.exists(model_name):
             cache_folder = os.getenv('HF_HUB_CACHE')
+            print(cache_folder)
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
-        
+            logger.info(f"Downloaded model to {model_name}")
         model = OmniGen.from_pretrained(model_name)
         processor = OmniGenProcessor.from_pretrained(model_name)
         vae = AutoencoderKL.from_pretrained(os.path.join(model_name, "vae"))
@@ -93,7 +94,7 @@ class OmniGenPipeline:
         height: int = 1024,
         width: int = 1024,
         num_inference_steps: int = 50,
-        guidance_scale: float = 4,
+        guidance_scale: float = 3,
         use_img_guidance: bool = True,
         img_guidance_scale: float = 1.6,
         separate_cfg_infer: bool = False,

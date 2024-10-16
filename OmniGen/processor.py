@@ -1,16 +1,15 @@
 import os
-import datasets
+import re
+from typing import Dict, List
+import json
+
 import torch
 import numpy as np
 import random
 from PIL import Image
-import json
-import copy
 from torchvision import transforms
-import pickle 
-import re
-from typing import Dict, List
 from transformers import AutoTokenizer
+from huggingface_hub import snapshot_download
 
 
 def crop_arr(pil_image, max_image_size):

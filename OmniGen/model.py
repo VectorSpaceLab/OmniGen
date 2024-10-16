@@ -184,7 +184,7 @@ class OmniGen(nn.Module):
     
     @classmethod
     def from_pretrained(cls, model_name):
-        if not os.path.exists(model_name):
+        if not os.path.exists(os.path.join(model_name, 'model.pt')):
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
@@ -303,43 +303,6 @@ class OmniGen(nn.Module):
             shapes = [height, width]
         return latents, num_tokens, shapes
 
-
-    # def forward(self, x, timestep, text_ids, pixel_values, image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None):
-    #     input_is_list = isinstance(x, list)
-    #     x, num_tokens, shapes = self.patch_multiple_resolutions(x, padding_latent)
-    #     time_token = self.time_token(timestep, dtype=x[0].dtype).unsqueeze(1)   
-        
-    #     if pixel_values is not None:
-    #         input_latents, _, _ = self.patch_multiple_resolutions(pixel_values, is_input_images=True)
-
-    #     condition_embeds = self.llm.embed_tokens(text_ids)
-    #     input_img_inx = 0
-    #     for b_inx in image_sizes.keys():
-    #         for start_inx, end_inx in image_sizes[b_inx]:
-    #             condition_embeds[b_inx, start_inx: end_inx] = input_latents[input_img_inx]
-    #             input_img_inx += 1
-    #     if pixel_values is not None:
-    #         assert input_img_inx == len(input_latents) 
-
-    #     input_emb = torch.cat([condition_embeds, time_token, x], dim=1)
-    #     output = self.llm(inputs_embeds=input_emb, attention_mask=attention_mask, position_ids=position_ids, past_key_values=past_key_values)
-    #     output, past_key_values = output.last_hidden_state, output.past_key_values
-    #     if input_is_list:
-    #         image_embedding = output[:, -max(num_tokens):]
-    #         time_emb = self.t_embedder(timestep, dtype=x.dtype)
-    #         x = self.final_layer(image_embedding, time_emb)
-    #         latents = []
-    #         for i in range(x.size(0)):
-    #             latent = x[i:i+1, :num_tokens[i]]
-    #             latent = self.unpatchify(latent, shapes[i][0], shapes[i][1])
-    #             latents.append(latent)
-    #     else:
-    #         image_embedding = output[:, -num_tokens:]
-    #         time_emb = self.t_embedder(timestep, dtype=x.dtype)
-    #         x = self.final_layer(image_embedding, time_emb)
-    #         latents = self.unpatchify(x, shapes[0], shapes[1])
-
-    #     return latents
     
     def forward(self, x, timestep, text_ids, pixel_values, image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None):
         """
@@ -401,24 +364,7 @@ class OmniGen(nn.Module):
         
         return torch.cat(model_out, dim=0), past_key_values
 
-    # @torch.no_grad()
-    # def forward_with_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale):
-    #     """
-    #     Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
-    #     """        
-    #     self.model.config.use_cache
-    #     model_out = self.forward(x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids)
-    #     if use_img_cfg:
-    #         cond, uncond, img_cond = torch.split(model_out, len(model_out) // 3, dim=0)
-    #         cond = uncond + img_cfg_scale * (img_cond - uncond) + cfg_scale * (cond - img_cond)
-    #         model_out = [cond, cond, cond]
-    #     else:
-    #         cond, uncond = torch.split(model_out, len(model_out) // 2, dim=0)
-    #         cond = uncond + cfg_scale * (cond - uncond)
-    #         model_out = [cond, cond]
-        
-    #     return torch.cat(model_out, dim=0)
-    
+
     @torch.no_grad()
     def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache):
         """
@@ -451,30 +397,6 @@ class OmniGen(nn.Module):
         
         return torch.cat(model_out, dim=0), pask_key_values
 
-    # @torch.no_grad()
-    # def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale):
-    #     """
-    #     Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
-    #     """        
-    #     x = torch.split(x, len(x) // len(input_ids), dim=0)
-    #     timestep = timestep.to(x[0].dtype)
-    #     timestep = torch.split(timestep, len(timestep) // len(input_ids), dim=0)
 
-    #     model_out = []
-    #     for i in range(len(input_ids)):
-    #         model_out.append(self.forward(x[i], timestep[i], input_ids[i], input_img_latents[i], input_image_sizes[i], attention_mask[i], position_ids[i]))
-
-    #     if len(model_out) == 3:
-    #         cond, uncond, img_cond = model_out
-    #         cond = uncond + img_cfg_scale * (img_cond - uncond) + cfg_scale * (cond - img_cond)
-    #         model_out = [cond, cond, cond]
-    #     elif len(model_out) == 2:
-    #         cond, uncond = model_out
-    #         cond = uncond + cfg_scale * (cond - uncond)
-    #         model_out = [cond, cond]
-    #     else:
-    #         return model_out[0]
-        
-    #     return torch.cat(model_out, dim=0)
 
 

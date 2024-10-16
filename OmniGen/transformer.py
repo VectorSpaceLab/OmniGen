@@ -6,7 +6,7 @@ import torch
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-
+from huggingface_hub import snapshot_download
 
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,

@@ -29,7 +29,7 @@ You can use the following code to generate images (more examples please refer to
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("model_path")
+pipe = OmniGenPipeline.from_pretrained("Shitao/tmp-preview")
 
 # Text to Image
 images = pipe(
@@ -44,23 +44,13 @@ images[0].save("t2i.png")
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
 # You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
 images = pipe(
-    prompt="Following the human pose.", 
-    input_images=["/share/shitao/projects/DiffusionGPT/data/cases/entity_imgs/yifei2.jpg"], 
+    prompt="A woman holds a bouquet of flowers and faces the camera. Thw woman is <img><|image_1|></img>.", 
+    input_images=["./imgs/test_cases/liuyifei.png"], 
     height=1024, 
     width=1024,
     guidance_scale=3, 
     img_guidance_scale=1.6)
 images[0].save("ti2i.png")
-
-images = pipe(
-    prompt="A woman is sitting at the dining table, holding a burger in his hand. The woman is <img><|image_1|></img>.", 
-    input_images=[["/share/shitao/projects/DiffusionGPT/data/cases/entity_imgs/yifei2.jpg"]], 
-    height=1024, 
-    width=1024,
-    guidance_scale=3, 
-    img_guidance_scale=1.6)
-images[0].save("tii2i.png")
-
 ```
 
 
