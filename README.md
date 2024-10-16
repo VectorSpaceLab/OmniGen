@@ -25,10 +25,11 @@ cd OmniGen
 pip install -e .
 ```
 
+You can use the following code to generate images (more examples please refer to [inference.ipynb](inference.ipynb)):
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("/share/shitao/projects/OmniGen/OmniGenv1")
+pipe = OmniGenPipeline.from_pretrained("model_path")
 
 # Text to Image
 images = pipe(
