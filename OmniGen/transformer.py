@@ -16,7 +16,7 @@ from transformers.modeling_outputs import (
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers import Phi3Config, Phi3Model
-from transformers.cache_utils import Cache, DynamicCache, SlidingWindowCache, StaticCache, OffloadedCache
+from transformers.cache_utils import Cache, DynamicCache, StaticCache
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)

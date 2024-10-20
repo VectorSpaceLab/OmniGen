@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 import torch
 from huggingface_hub import snapshot_download
+from peft import LoraConfig, PeftModel
 from diffusers.models import AutoencoderKL
 from diffusers.utils import (
     USE_PEFT_BACKEND,
@@ -31,7 +32,7 @@ EXAMPLE_DOC_STRING = """
         >>> prompt = "A woman holds a bouquet of flowers and faces the camera"
         >>> image = pipe(
         ...     prompt,
-        ...     guidance_scale=1.0,
+        ...     guidance_scale=3.0,
         ...     num_inference_steps=50,
         ... ).images[0]
         >>> image.save("t2i.png")
@@ -53,23 +54,36 @@ class OmniGenPipeline:
 
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
+        self.model.eval()
         self.vae.to(self.device)
 
     @classmethod
-    def from_pretrained(cls, model_name):
+    def from_pretrained(cls, model_name, vae_path: str=None):
         if not os.path.exists(model_name):
+            logger.info("Model not found, downloading...")
             cache_folder = os.getenv('HF_HUB_CACHE')
-            print(cache_folder)
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
             logger.info(f"Downloaded model to {model_name}")
         model = OmniGen.from_pretrained(model_name)
         processor = OmniGenProcessor.from_pretrained(model_name)
-        vae = AutoencoderKL.from_pretrained(os.path.join(model_name, "vae"))
+
+        if os.path.exists(os.path.join(model_name, "vae")):
+            vae = AutoencoderKL.from_pretrained(os.path.join(model_name, "vae"))
+        elif vae_path is not None:
+            vae = AutoencoderKL.from_pretrained(vae_path).to(device)
+        else:
+            logger.info(f"No VAE found in {model_name}, downloading stabilityai/sdxl-vae from HF")
+            vae = AutoencoderKL.from_pretrained("stabilityai/sdxl-vae").to(device)
 
         return cls(vae, model, processor)
     
+    def merge_lora(self, lora_path: str):
+        model = PeftModel.from_pretrained(self.model, lora_path)
+        model.merge_and_unload()
+        self.model = model
+
     def vae_encode(self, x, dtype):
         if self.vae.config.shift_factor is not None:
             x = self.vae.encode(x).latent_dist.sample()
@@ -100,6 +114,7 @@ class OmniGenPipeline:
         separate_cfg_infer: bool = False,
         use_kv_cache: bool = True,
         dtype: torch.dtype = torch.bfloat16,
+        seed: int = None,
         ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -128,15 +143,18 @@ class OmniGenPipeline:
             separate_cfg_infer (`bool`, *optional*, defaults to False):
                 Perform inference on images with different guidance separately; this can save memory when generating images of large size at the expense of slower inference.
             use_kv_cache (`bool`, *optional*, defaults to True): enable kv cache to speed up the inference
-
+            generator (`torch.Generator` or `List[torch.Generator]`, *optional*):
+                One or a list of [torch generator(s)](https://pytorch.org/docs/stable/generated/torch.Generator.html)
+                to make generation deterministic.
         Examples:
 
         Returns:
             A list with the generated images.
         """
         assert height%16 == 0 and width%16 == 0
-        if use_kv_cache and separate_cfg_infer:
-            raise "Currently, don't support both use_kv_cache and separate_cfg_infer"
+        if separate_cfg_infer:
+            use_kv_cache = False
+            # raise "Currently, don't support both use_kv_cache and separate_cfg_infer"
         if input_images is None:
             use_img_guidance = False
         if isinstance(prompt, str):
@@ -149,7 +167,11 @@ class OmniGenPipeline:
         num_cfg = 2 if use_img_guidance else 1
         latent_size_h, latent_size_w = height//8, width//8
 
-        latents = torch.randn(num_prompt, 4, latent_size_h, latent_size_w, device=self.device)
+        if seed is not None:
+            generator = torch.Generator(device=self.device).manual_seed(seed)
+        else:
+            generator = None
+        latents = torch.randn(num_prompt, 4, latent_size_h, latent_size_w, device=self.device, generator=generator)
         latents = torch.cat([latents]*(1+num_cfg), 0).to(dtype)
 
         input_img_latents = []

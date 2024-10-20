@@ -15,9 +15,10 @@ setup(
     include_package_data=True,
     install_requires=[
         'torch>=1.6.0',
-        'transformers>=4.41.0',
+        'transformers==4.45.2',
         'datasets',
-        'accelerate>=0.20.1',
-        'diffusers>=0.30.3'
+        'accelerate==0.26.1',
+        'diffusers>=0.30.3',
+        "timm"
     ],
 )

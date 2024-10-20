@@ -1,0 +1,5 @@
+{"task_type":"text_to_iamge","instruction":"a photo of sks dog","input_images":[],"output_image":"dog1.jpeg"}
+{"task_type":"text_to_iamge","instruction":"sks dog","input_images":[],"output_image":"dog2.jpeg"}
+{"task_type":"text_to_iamge","instruction":"a photo of sks dog. The background is orange.","input_images":[],"output_image":"dog3.jpeg"}
+{"task_type":"text_to_iamge","instruction":"a photo of sks dog","input_images":[],"output_image":"dog4.jpeg"}
+{"task_type":"text_to_iamge","instruction":"a photo of sks dog","input_images":[],"output_image":"dog5.jpeg"}

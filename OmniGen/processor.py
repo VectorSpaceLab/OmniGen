@@ -11,28 +11,15 @@ from torchvision import transforms
 from transformers import AutoTokenizer
 from huggingface_hub import snapshot_download
 
+from OmniGen.utils import (
+    create_logger,
+    update_ema,
+    requires_grad,
+    center_crop_arr,
+    crop_arr,
+)
 
-def crop_arr(pil_image, max_image_size):
-    while min(*pil_image.size) >= 2 * max_image_size:
-        pil_image = pil_image.resize(
-            tuple(x // 2 for x in pil_image.size), resample=Image.BOX
-        )
 
-    if max(*pil_image.size) > max_image_size:
-        scale = max_image_size / max(*pil_image.size)
-        pil_image = pil_image.resize(
-            tuple(round(x * scale) for x in pil_image.size), resample=Image.BICUBIC
-        )
-
-    arr = np.array(pil_image)
-    crop_y1 = (arr.shape[0] % 16) // 2
-    crop_y2 = arr.shape[0] % 16 - crop_y1
-
-    crop_x1 = (arr.shape[1] % 16) // 2
-    crop_x2 = arr.shape[1] % 16 - crop_x1
-
-    arr = arr[crop_y1:arr.shape[0]-crop_y2, crop_x1:arr.shape[1]-crop_x2]    
-    return Image.fromarray(arr)
 
 
 class OmniGenProcessor:
@@ -68,6 +55,7 @@ class OmniGenProcessor:
         return self.image_transform(image)
     
     def process_multi_modal_prompt(self, text, input_images):
+        text = self.add_prefix_instruction(text)
         if input_images is None or len(input_images) == 0:
             model_inputs = self.text_tokenizer(text)
             return {"input_ids": model_inputs.input_ids, "pixel_values": None, "image_sizes": None}
@@ -132,7 +120,6 @@ class OmniGenProcessor:
         for i in range(len(instructions)):
             cur_instruction = instructions[i]
             cur_input_images = None if input_images is None else input_images[i]
-            cur_instruction = self.add_prefix_instruction(cur_instruction)
             if cur_input_images is not None and len(cur_input_images) > 0:
                 cur_input_images = [self.process_image(x) for x in cur_input_images]
             else:
@@ -143,14 +130,13 @@ class OmniGenProcessor:
 
         
             neg_mllm_input, img_cfg_mllm_input = None, None
-            neg_instruction = self.add_prefix_instruction(negative_prompt)
-            neg_mllm_input = self.process_multi_modal_prompt(neg_instruction, None)
+            neg_mllm_input = self.process_multi_modal_prompt(negative_prompt, None)
             if use_img_cfg:
                 if cur_input_images is not None and len(cur_input_images) >= 1:
                     img_cfg_prompt = [f"<img><|image_{i+1}|></img>" for i in range(len(cur_input_images))]
-                    img_cfg_mllm_input = self.process_multi_modal_prompt(self.add_prefix_instruction(" ".join(img_cfg_prompt)), cur_input_images)
+                    img_cfg_mllm_input = self.process_multi_modal_prompt(" ".join(img_cfg_prompt), cur_input_images)
                 else:
-                    img_cfg_mllm_input = neg_instruction
+                    img_cfg_mllm_input = neg_mllm_input
 
             input_data.append((mllm_input, neg_mllm_input, img_cfg_mllm_input, [height, width]))
 

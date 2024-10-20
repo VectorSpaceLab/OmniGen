@@ -5,7 +5,10 @@ import torch.nn as nn
 import numpy as np
 import math
 from typing import Dict
+
+from diffusers.loaders import PeftAdapterMixin
 from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
+from huggingface_hub import snapshot_download
 
 from OmniGen.transformer import Phi3Config, Phi3Transformer
 
@@ -145,7 +148,7 @@ class PatchEmbedMR(nn.Module):
         return x
 
 
-class OmniGen(nn.Module):
+class OmniGen(nn.Module, PeftAdapterMixin):
     """
     Diffusion model with a Transformer backbone.
     """
@@ -191,7 +194,7 @@ class OmniGen(nn.Module):
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
         config = Phi3Config.from_pretrained(model_name)
         model = cls(config)
-        ckpt = torch.load(os.path.join(model_name, 'model.pt'))
+        ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
         model.load_state_dict(ckpt)
         return model
 
@@ -304,7 +307,7 @@ class OmniGen(nn.Module):
         return latents, num_tokens, shapes
 
     
-    def forward(self, x, timestep, text_ids, pixel_values, image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None):
+    def forward(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None, return_past_key_values=True):
         """
         
         """
@@ -312,16 +315,16 @@ class OmniGen(nn.Module):
         x, num_tokens, shapes = self.patch_multiple_resolutions(x, padding_latent)
         time_token = self.time_token(timestep, dtype=x[0].dtype).unsqueeze(1)   
         
-        if pixel_values is not None:
-            input_latents, _, _ = self.patch_multiple_resolutions(pixel_values, is_input_images=True)
-        if text_ids is not None:
-            condition_embeds = self.llm.embed_tokens(text_ids)
+        if input_img_latents is not None:
+            input_latents, _, _ = self.patch_multiple_resolutions(input_img_latents, is_input_images=True)
+        if input_ids is not None:
+            condition_embeds = self.llm.embed_tokens(input_ids).clone()
             input_img_inx = 0
-            for b_inx in image_sizes.keys():
-                for start_inx, end_inx in image_sizes[b_inx]:
+            for b_inx in input_image_sizes.keys():
+                for start_inx, end_inx in input_image_sizes[b_inx]:
                     condition_embeds[b_inx, start_inx: end_inx] = input_latents[input_img_inx]
                     input_img_inx += 1
-            if pixel_values is not None:
+            if input_img_latents is not None:
                 assert input_img_inx == len(input_latents) 
 
             input_emb = torch.cat([condition_embeds, time_token, x], dim=1)
@@ -344,7 +347,9 @@ class OmniGen(nn.Module):
             x = self.final_layer(image_embedding, time_emb)
             latents = self.unpatchify(x, shapes[0], shapes[1])
 
-        return latents, past_key_values
+        if past_key_values:
+            return latents, past_key_values
+        return latents
 
     @torch.no_grad()
     def forward_with_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache):

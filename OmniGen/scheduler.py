@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from transformers.cache_utils import Cache, DynamicCache, OffloadedCache
+from transformers.cache_utils import Cache, DynamicCache
 
 class OmniGenScheduler:
     def __init__(self, num_steps: int=50, time_shifting_factor: int=1):
