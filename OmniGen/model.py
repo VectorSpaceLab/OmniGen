@@ -347,7 +347,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             x = self.final_layer(image_embedding, time_emb)
             latents = self.unpatchify(x, shapes[0], shapes[1])
 
-        if past_key_values:
+        if return_past_key_values:
             return latents, past_key_values
         return latents
 
@@ -357,7 +357,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
         """        
         self.llm.config.use_cache = use_kv_cache
-        model_out, past_key_values = self.forward(x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, past_key_values=past_key_values)
+        model_out, past_key_values = self.forward(x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, past_key_values=past_key_values, return_past_key_values=True)
         if use_img_cfg:
             cond, uncond, img_cond = torch.split(model_out, len(model_out) // 3, dim=0)
             cond = uncond + img_cfg_scale * (img_cond - uncond) + cfg_scale * (cond - img_cond)
@@ -371,7 +371,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
 
     @torch.no_grad()
-    def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache):
+    def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache, return_past_key_values=True):
         """
         Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
         """        

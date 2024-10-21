@@ -23,7 +23,7 @@
     <p>
         <a href=#Overview>Overview</a> |
         <a href=#news>News</a> |
-        <a href=#results>Results</a> |
+        <a href=#methodology>Methodology</a> |
         <a href=#quick-start>Quick Start</a> |
         <a href=#gradio-demo>Gradio Demo</a> |
         <a href="#finetune">Finetune</a> |
@@ -35,32 +35,33 @@
 
 
 
-## Overview
+## 1. Overview
 
-To handle some complex tasks, image generation models are becoming increasingly sophisticated, leading to more and more cumbersome workflows. Existing image generation models like SD and Flux require loading many additional network modules (such as ControlNet, IP-Adapter, Reference-Net) and extra preprocessing steps (e.g., face detection, pose detection, image cropping) to generate a satisfactory image. This complex workflow is not user-friendly. We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation.
+OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, easy to use, and flexible. We provide [inference code](inference.ipynb) so you can explore more functionalities of OmniGen.
+Existing image generation models require loading many additional network modules (such as ControlNet, IP-Adapter, Reference-Net) and extra preprocessing steps (e.g., face detection, pose detection, image cropping) to generate a satisfactory image.
+We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation.
 
-Therefore, we propose OmniGen, a model capable of handling various image generation tasks within a single framework. The goal of OmniGen is to complete various image generation tasks without relying on any additional components or image preprocessing steps. OmniGen supports tasks including text-to-image generation, image editing, subject-driven image generation, and classical vision tasks, among others. More capabilities can be found in our examples. We provide inference code so you can explore more unknown functionalities yourself.
-
-Due to current limitations in resources and data, OmniGen still has room for improvement. We will continue to optimize the model. You can also choose to fine-tune the model for specific tasks. Fine-tuning OmniGen is very straightforward. Since OmniGen's architecture natively supports various tasks, you don't need to worry about designing a network structure for a specific task; you just need to prepare the corresponding data, and you can endow OmniGen with new image generation capabilities through fine-tuning. Imagination is no longer limited; you can construct any image generation task, and perhaps we can achieve some very interesting things.
+Due to current limitations in resources and data, OmniGen still has room for improvement. We will continue to optimize the model. You can also choose to fine-tune the model for specific tasks. Fine-tuning OmniGen is very simple: you don't need to worry about designing a network structure for a specific task; you just need to prepare the corresponding data, and then run the [script](docs/fine-tuning.md). Imagination is no longer limited; you can construct any image generation task, and perhaps we can achieve some very interesting things.
 
 If you have any questions or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com.
 
 
 
-## News
+
+## 2. News
 - 2024-10-22: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) :fire:
 - 2024-10-22: We release the first version of OmniGen. Model weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1)  HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  :fire:
 
 
 
-## Results
+## 3. Methodology
 
-
+You can see details in our [paper](https://arxiv.org/abs/2409.11340). 
 ![overall](imgs/overall.jpg)
 
 
 
-## Quick Start
+## 4. Quick Start
 
 
 ### Using OmniGen
@@ -103,11 +104,11 @@ images[0].save("ti2i.png")
 For more details about inference, please refer to [docs/inference.md](docs/inference.md).
 
 
-### Diffusers
+### Using Diffusers
 Coming soon.
 
 
-## Gradio Demo
+## 5. Gradio Demo
 
 We have constructed a online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
 
@@ -118,7 +119,7 @@ python app.py
 
 
 
-## Finetune
+## 6. Finetune
 We provide a train scrip `train.py` to fine-tune OmniGen. Please refer to [docs/finetune.md](docs/finetune.md) for more details.
 
 
