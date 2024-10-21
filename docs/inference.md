@@ -87,3 +87,4 @@ python app.py
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
 - Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
 - Low-quality: More detailed prompt will lead to better results. Besides, larger size of the image (`height` and `width`) will also help.
+- Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.

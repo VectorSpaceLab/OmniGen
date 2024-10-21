@@ -19,6 +19,7 @@ setup(
         'datasets',
         'accelerate==0.26.1',
         'diffusers>=0.30.3',
-        "timm"
+        "timm",
+        "peft==0.9.0"
     ],
 )

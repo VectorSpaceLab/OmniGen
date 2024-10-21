@@ -24,7 +24,7 @@
         <a href=#gradio-demo>Gradio Demo</a> |
         <a href="#finetune">Finetune</a> |
         <a href="#license">License</a> |
-        <a href="#citation">Citation</a> |
+        <a href="#citation">Citation</a>
     <p>
 </h4>
 
@@ -32,20 +32,21 @@
 
 ## 1. Overview
 
-OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, easy to use, and flexible. We provide [inference code](inference.ipynb) so you can explore more functionalities of OmniGen.
-Existing image generation models require loading many additional network modules (such as ControlNet, IP-Adapter, Reference-Net) and extra preprocessing steps (e.g., face detection, pose detection, image cropping) to generate a satisfactory image.
-We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation.
+OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](inference.ipynb) so that everyone can explore more functionalities of OmniGen.
 
-Due to current limitations in resources and data, OmniGen still has room for improvement. We will continue to optimize the model. You can also choose to fine-tune the model for specific tasks. Fine-tuning OmniGen is very simple: you don't need to worry about designing a network structure for a specific task; you just need to prepare the corresponding data, and then run the [script](docs/fine-tuning.md). Imagination is no longer limited; you can construct any image generation task, and perhaps we can achieve some very interesting things.
+In face, existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image.
+However, we believe that the future image generation paradigm should be more compact, simple, and flexible, that is, generating various images directly through arbitrarily interleaved multi-modal instructions without the need and cost for additional plugins and operations.
+<!-- We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation. -->
 
-If you have any questions or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com.
+Due to the limited resources, as a fundamental and beneficial exploration and demonstration, OmniGen still has huge room for improvement. We will continue to optimize it. You can also easily fine-tune OmniGen without worrying about designing networks for specific tasks; you just need to prepare the corresponding data, and then run the [script](docs/fine-tuning.md). Imagination is no longer limited; everyone can construct any image generation task, and perhaps we can achieve very interesting, wonderful and creative things.
 
+If you have any questions, ideas or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com, wangyueze@tju.edu.cn.
 
 
 
 ## 2. News
 - 2024-10-22: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) :fire:
-- 2024-10-22: We release the first version of OmniGen. Model weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1)  HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  :fire:
+- 2024-10-22: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  :fire:
 
 
 
@@ -68,8 +69,8 @@ pip install -e .
 ```
 
 
-You can see our examples in [inference.ipynb](inference.ipynb) to generate images. 
-Here are some simple examples:
+More functions can be seen in [inference.ipynb](inference.ipynb). 
+Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
 
@@ -82,7 +83,7 @@ images = pipe(
     width=1024, 
     guidance_scale=3
     )
-images[0].save("t2i.png")
+images[0].save("t2i_example.png")
 
 # Multi-modal to Image
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
@@ -92,11 +93,13 @@ images = pipe(
     input_images=["./imgs/test_cases/liuyifei.png"], 
     height=1024, 
     width=1024,
+    separate_cfg_infer=False,  # if OOM, you can set separate_cfg_infer=True 
     guidance_scale=3, 
-    img_guidance_scale=1.6)
-images[0].save("ti2i.png")
+    img_guidance_scale=1.6
+    )
+images[0].save("ti2i_example.png")
 ```
-For more details about inference, please refer to [docs/inference.md](docs/inference.md).
+For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md).
 
 
 ### Using Diffusers
@@ -105,9 +108,9 @@ Coming soon.
 
 ## 5. Gradio Demo
 
-We have constructed a online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
+We have constructed an online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
 
-For the local gradio demo, you can run with the following command:
+For the local gradio demo, you can run:
 ```python
 python app.py
 ```

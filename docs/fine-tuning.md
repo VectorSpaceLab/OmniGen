@@ -43,26 +43,26 @@ train.py \
 --keep_raw_resolution \
 --max_image_size 1024 \
 --gradient_accumulation_steps 1 \
---ckpt_every 10 \
+--ckpt_every 100 \
 --epochs 100 \
 --log_every 1 \
 --results_dir ./results/toy_finetune
 ```
 
 Some important arguments:
-- num_processes: number of GPU to use for training
-- model_name_or_path: path to the pretrained model
-- json_file: path to the json file containing the training data, e.g., ./toy_data/toy_data.jsonl
-- image_path: path to the image folder, e.g., ./toy_data/images
-- batch_size_per_device: batch size per device
-- lr: learning rate
-- keep_raw_resolution: whether to keep the original resolution of the image, if not, all images will be resized to (max_image_size, max_image_size)
-- max_image_size: max image size
-- gradient_accumulation_steps: number of steps to accumulate gradients
-- ckpt_every: number of steps to save checkpoint
-- epochs: number of epochs
-- log_every: number of steps to log
-- results_dir: path to the results folder
+- `num_processes`: number of GPU to use for training
+- `model_name_or_path`: path to the pretrained model
+- `json_file`: path to the json file containing the training data, e.g., ./toy_data/toy_data.jsonl
+- `image_path`: path to the image folder, e.g., ./toy_data/images
+- `batch_size_per_device`: batch size per device
+- `lr`: learning rate
+- `keep_raw_resolution`: whether to keep the original resolution of the image, if not, all images will be resized to (max_image_size, max_image_size)
+- `max_image_size`: max image size
+- `gradient_accumulation_steps`: number of steps to accumulate gradients
+- `ckpt_every`: number of steps to save checkpoint
+- `epochs`: number of epochs
+- `log_every`: number of steps to log
+- `results_dir`: path to the results folder
 
 The data format of json_file is as follows:
 ```
@@ -79,7 +79,7 @@ The checkpoint can be found at `{results_dir}/checkpoints/*`. You can use the fo
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("checkpoint_path") # e.g., ./results/toy_finetune/checkpoints/0000010
+pipe = OmniGenPipeline.from_pretrained("checkpoint_path") # e.g., ./results/toy_finetune/checkpoints/0000200
 ```
 
 
@@ -105,7 +105,7 @@ train.py \
 --keep_raw_resolution \
 --max_image_size 1024 \
 --gradient_accumulation_steps 1 \
---ckpt_every 10 \
+--ckpt_every 100 \
 --epochs 100 \
 --log_every 1 \
 --results_dir ./results/toy_finetune_lora
@@ -118,7 +118,7 @@ The checkpoint can be found at `{results_dir}/checkpoints/*`. You can use the fo
 from OmniGen import OmniGenPipeline
 
 pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
-pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000010
+pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000100
 ```
 
 
@@ -142,7 +142,7 @@ train.py \
 --keep_raw_resolution \
 --max_image_size 1024 \
 --gradient_accumulation_steps 1 \
---ckpt_every 10 \
+--ckpt_every 100 \
 --epochs 200 \
 --log_every 1 \
 --results_dir ./results/toy_finetune_lora
@@ -153,7 +153,7 @@ After training, you can use the following command to generate images:
 from OmniGen import OmniGenPipeline
 
 pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
-pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000010
+pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000200
 
 images = pipe(
     prompt="a photo of sks dog running in the snow", 
@@ -162,4 +162,30 @@ images = pipe(
     guidance_scale=3
     )
 images[0].save("sks_dog_snow.png")
+
+
+
+from OmniGen import OmniGenPipeline
+
+pipe = OmniGenPipeline.from_pretrained("/share/shitao/projects/OmniGen/OmniGenv1")
+images = pipe(
+    prompt="a photo of sks dog running in the snow", 
+    height=1024, 
+    width=1024, 
+    guidance_scale=2.5,
+    seed=0,
+    )
+images[0].save("sks_dog_snow.png")
+
+
+pipe.merge_lora("/share/shitao/repos/OmniGen/results/toy_finetune_lora/checkpoints/0000400") # e.g., ./results/toy_finetune_lora/checkpoints/0000200
+
+images = pipe(
+    prompt="a photo of sks dog running in the snow", 
+    height=1024, 
+    width=1024, 
+    guidance_scale=3,
+    seed=0,
+    )
+images[0].save("sks_dog_snow2.png")
 ```
