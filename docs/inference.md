@@ -1,7 +1,12 @@
 # Inference with OmniGen
 
+To handle some complex tasks, image generation models are becoming increasingly sophisticated, leading to more and more cumbersome workflows. Existing image generation models like SD and Flux require loading many additional network modules (such as ControlNet, IP-Adapter, Reference-Net) and extra preprocessing steps (e.g., face detection, pose detection, image cropping) to generate a satisfactory image. This complex workflow is not user-friendly. We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation.
 
-### Install
+Therefore, we propose OmniGen, a model capable of handling various image generation tasks within a single framework. The goal of OmniGen is to complete various image generation tasks without relying on any additional components or image preprocessing steps. OmniGen supports tasks including text-to-image generation, image editing, subject-driven image generation, and classical vision tasks, among others. More capabilities can be found in our examples. We provide inference code so you can explore more unknown functionalities yourself.
+
+
+
+## Install
 ```bash
 git clone https://github.com/staoxiao/OmniGen.git
 cd OmniGen
@@ -10,7 +15,7 @@ pip install -e .
 
 
 
-### Generate Images
+## Generate Images
 You can use the following code to generate images:
 ```python
 from OmniGen import OmniGenPipeline
@@ -68,7 +73,10 @@ input_images = [[], ["./imgs/test_cases/liuyifei.png"]]
 ```
 
 
-### OOM issue
+#### OOM issue
 
 If you encounter OOM issue, you can try to set `separate_cfg_infer=True` and `use_kv_cache=False`. This will reduce the memory usage but increase the generation speed.
 You also can reduce the size of the image, e.g., `height=768, width=512`.
+
+
+#### Gradio Demo

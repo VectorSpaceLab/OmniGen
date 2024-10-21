@@ -1,14 +1,37 @@
-# OmniGen: Unified Image Generation
+<h1 align="center">OmniGen: Unified Image Generation</h1>
 
-<div align="center">
 
-[![HF Demo](https://img.shields.io/badge/HF%20Demo-🤗-lightblue)]()&nbsp;
-[![arXiv](https://img.shields.io/badge/arXiv%20paper-2409.11340-b31b1b.svg)](https://arxiv.org/abs/2409.11340)&nbsp;
-[![Model](https://img.shields.io/badge/OmniGen-🤗-yellow)]()&nbsp;
-[![Project Page](https://img.shields.io/badge/OmniGen-Page-yellow)]()&nbsp;
+<p align="center">
+    <a href="">
+        <img alt="Build" src="https://img.shields.io/badge/Project%20Page-OmniGen-yellow">
+    </a>
+    <a href="https://arxiv.org/abs/2409.11340">
+            <img alt="Build" src="https://img.shields.io/badge/arXiv%20paper-2409.11340-b31b1b.svg">
+    </a>
+    <a href="https://huggingface.co/spaces/Shitao/OmniGen">
+        <img alt="License" src="https://img.shields.io/badge/HF%20Demo-🤗-lightblue">
+    </a>
+    <a href="https://huggingface.co/C-MTEB">
+        <img alt="Build" src="https://img.shields.io/badge/C_MTEB-🤗-yellow">
+    </a>
+    <a href="https://huggingface.co/Shitao/OmniGen-v1">
+        <img alt="Build" src="https://img.shields.io/badge/HF%20Model-🤗-yellow">
+    </a>
+</p>
 
-</div>
-
+<h4 align="center">
+    <p>
+        <a href=#Overview>Overview</a> |
+        <a href=#news>News</a> |
+        <a href=#results>Results</a> |
+        <a href=#quick-start>Quick Start</a> |
+        <a href=#gradio-demo>Gradio Demo</a> |
+        <a href="#finetune">Finetune</a> |
+        <a href="#license">License</a> |
+        <a href="#citation">Citation</a> |
+        <a href="https://huggingface.co/Shitao/OmniGen-v1">Model Weight</a>
+    <p>
+</h4>
 
 
 
@@ -24,9 +47,9 @@ If you have any questions or interesting tasks you want OmniGen to accomplish, f
 
 
 
-## Update
-- 2024-10-21: We release the training code for OmniGen.
-- 2024-10-21: We release the first version of OmniGen.
+## News
+- 2024-10-22: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) :fire:
+- 2024-10-22: We release the first version of OmniGen. Model weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1)  HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  :fire:
 
 
 
@@ -35,7 +58,10 @@ If you have any questions or interesting tasks you want OmniGen to accomplish, f
 
 ![overall](imgs/overall.jpg)
 
-## Generate Images
+
+
+## Quick Start
+
 
 ### Using OmniGen
 Install:
@@ -76,15 +102,32 @@ images[0].save("ti2i.png")
 ```
 For more details about inference, please refer to [docs/inference.md](docs/inference.md).
 
+
 ### Diffusers
 Coming soon.
 
 
-## Fine-tuning
+## Gradio Demo
+
+We have constructed a online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
+
+For the local gradio demo, you can run with the following command:
+```python
+python app.py
+```
+
+
+
+## Finetune
 We provide a train scrip `train.py` to fine-tune OmniGen. Please refer to [docs/finetune.md](docs/finetune.md) for more details.
 
 
-## citation
+
+## License
+This repo is licensed under the [MIT License](LICENSE). 
+
+
+## Citation
 
 ```
 @article{xiao2024omnigen,

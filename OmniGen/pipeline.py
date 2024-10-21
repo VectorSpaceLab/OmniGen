@@ -83,6 +83,12 @@ class OmniGenPipeline:
         model = PeftModel.from_pretrained(self.model, lora_path)
         model.merge_and_unload()
         self.model = model
+    
+    def to(self, device: Union[str, torch.device]):
+        if isinstance(device, str):
+            device = torch.device(device)
+        self.model.to(device)
+        self.vae.to(device)
 
     def vae_encode(self, x, dtype):
         if self.vae.config.shift_factor is not None:

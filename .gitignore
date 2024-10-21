@@ -163,4 +163,4 @@ cython_debug/
 
 # myfile
 .results/
-.*.png
+*.png
