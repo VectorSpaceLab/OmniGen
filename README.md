@@ -11,9 +11,6 @@
     <a href="https://huggingface.co/spaces/Shitao/OmniGen">
         <img alt="License" src="https://img.shields.io/badge/HF%20Demo-🤗-lightblue">
     </a>
-    <a href="https://huggingface.co/C-MTEB">
-        <img alt="Build" src="https://img.shields.io/badge/C_MTEB-🤗-yellow">
-    </a>
     <a href="https://huggingface.co/Shitao/OmniGen-v1">
         <img alt="Build" src="https://img.shields.io/badge/HF%20Model-🤗-yellow">
     </a>
@@ -21,7 +18,6 @@
 
 <h4 align="center">
     <p>
-        <a href=#Overview>Overview</a> |
         <a href=#news>News</a> |
         <a href=#methodology>Methodology</a> |
         <a href=#quick-start>Quick Start</a> |
@@ -29,7 +25,6 @@
         <a href="#finetune">Finetune</a> |
         <a href="#license">License</a> |
         <a href="#citation">Citation</a> |
-        <a href="https://huggingface.co/Shitao/OmniGen-v1">Model Weight</a>
     <p>
 </h4>
 
@@ -78,7 +73,7 @@ Here are some simple examples:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/tmp-preview")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 
 # Text to Image
 images = pipe(
@@ -120,7 +115,31 @@ python app.py
 
 
 ## 6. Finetune
-We provide a train scrip `train.py` to fine-tune OmniGen. Please refer to [docs/finetune.md](docs/finetune.md) for more details.
+We provide a train scrip `train.py` to fine-tune OmniGen. 
+Here is a toy example:
+```bash
+accelerate launch  \
+--num_processes=1 \
+train.py \
+--model_name_or_path /share/shitao/projects/OmniGen/OmniGenv1 \
+--batch_size_per_device 2 \
+--condition_dropout_prob 0.01 \
+--lr 1e-3 \
+--use_lora \
+--lora_rank 8 \
+--json_file ./toy_data/toy_subject_data.jsonl \
+--image_path ./toy_data/images \
+--max_input_length_limit 18000 \
+--keep_raw_resolution \
+--max_image_size 1024 \
+--gradient_accumulation_steps 1 \
+--ckpt_every 10 \
+--epochs 200 \
+--log_every 1 \
+--results_dir ./results/toy_finetune_lora
+```
+
+Please refer to [docs/finetune.md](docs/finetune.md) for more details.
 
 
 

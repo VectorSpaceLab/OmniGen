@@ -82,6 +82,8 @@ class OmniGenPipeline:
     def merge_lora(self, lora_path: str):
         model = PeftModel.from_pretrained(self.model, lora_path)
         model.merge_and_unload()
+
+        
         self.model = model
     
     def to(self, device: Union[str, torch.device]):

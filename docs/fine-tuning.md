@@ -35,7 +35,7 @@ accelerate launch  \
 --fsdp_cpu_ram_efficient_loading false \
 --fsdp_sync_module_states True \
 train.py \
---model_name_or_path /share/shitao/projects/OmniGen/OmniGenv1 \
+--model_name_or_path Shitao/OmniGen-v1 \
 --json_file ./toy_data/toy_data.jsonl \
 --image_path ./toy_data/images \
 --batch_size_per_device 1 \
@@ -93,7 +93,7 @@ LoRA fine-tuning is a simple way to fine-tune OmniGen with less GPU memory. To u
 accelerate launch  \
 --num_processes=1 \
 train.py \
---model_name_or_path /share/shitao/projects/OmniGen/OmniGenv1 \
+--model_name_or_path Shitao/OmniGen-v1 \
 --batch_size_per_device 2 \
 --condition_dropout_prob 0.01 \
 --lr 3e-4 \
@@ -117,7 +117,7 @@ The checkpoint can be found at `{results_dir}/checkpoints/*`. You can use the fo
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/tmp-preview")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000010
 ```
 
@@ -130,7 +130,7 @@ Here is an example for learning new concepts: "sks dog". We use five images of o
 accelerate launch  \
 --num_processes=1 \
 train.py \
---model_name_or_path /share/shitao/projects/OmniGen/OmniGenv1 \
+--model_name_or_path Shitao/OmniGen-v1 \
 --batch_size_per_device 2 \
 --condition_dropout_prob 0.01 \
 --lr 1e-3 \
@@ -152,7 +152,7 @@ After training, you can use the following command to generate images:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/tmp-preview")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 pipe.merge_lora("checkpoint_path") # e.g., ./results/toy_finetune_lora/checkpoints/0000010
 
 images = pipe(

@@ -20,7 +20,7 @@ You can use the following code to generate images:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/tmp-preview")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 
 # Text to Image
 images = pipe(
@@ -73,10 +73,17 @@ input_images = [[], ["./imgs/test_cases/liuyifei.png"]]
 ```
 
 
-#### OOM issue
-
-If you encounter OOM issue, you can try to set `separate_cfg_infer=True` and `use_kv_cache=False`. This will reduce the memory usage but increase the generation speed.
-You also can reduce the size of the image, e.g., `height=768, width=512`.
-
-
 #### Gradio Demo
+We have constructed a online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
+
+For the local gradio demo, you can run with the following command:
+```python
+python app.py
+```
+
+
+## Tips
+- OOM issue: If you encounter OOM issue, you can try to set `separate_cfg_infer=True`. This will reduce the memory usage but increase the generation speed. You also can reduce the size of the image, e.g., `height=768, width=512`.
+- Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
+- Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
+- Low-quality: More detailed prompt will lead to better results. Besides, larger size of the image (`height` and `width`) will also help.
