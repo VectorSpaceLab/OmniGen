@@ -18,22 +18,22 @@
 
 <h4 align="center">
     <p>
-        <a href=#news>News</a> |
-        <a href=#methodology>Methodology</a> |
-        <a href=#what-can-omnigen-do>Capabilities</a> |
-        <a href=#quick-start>Quick Start</a> |
-        <a href="#finetune">Finetune</a> |
+        <a href=#2-news>News</a> |
+        <a href=#3-methodology>Methodology</a> |
+        <a href=#4-what-can-omnigen-do>Capabilities</a> |
+        <a href=#5-quick-start>Quick Start</a> |
+        <a href="#6-finetune">Finetune</a> |
         <a href="#license">License</a> |
         <a href="#citation">Citation</a>
     <p>
 </h4>
 
 
-
 ## 1. Overview
 
 OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#4-quick-start) so that everyone can explore more functionalities of OmniGen.
-Existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image. However, we believe that the future image generation paradigm should be more simple and flexible, that is, generating various images directly through arbitrarily multi-modal instructions without the need for additional plugins and operations, similar to how GPT works in language generation. [](#what-can-omnigen-do)
+
+Existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image. However, we believe that the future image generation paradigm should be more simple and flexible, that is, generating various images directly through arbitrarily multi-modal instructions without the need for additional plugins and operations, similar to how GPT works in language generation. 
 
 Due to the limited resources, OmniGen still has room for improvement. We will continue to optimize it, and hope it inspire more universal image generation models. You can also easily fine-tune OmniGen without worrying about designing networks for specific tasks; you just need to prepare the corresponding data, and then run the [script](#6-finetune). Imagination is no longer limited; everyone can construct any image generation task, and perhaps we can achieve very interesting, wonderful and creative things.
 
@@ -52,15 +52,15 @@ If you have any questions, ideas or interesting tasks you want OmniGen to accomp
 You can see details in our [paper](https://arxiv.org/abs/2409.11340). 
 ![overall](imgs/overall.jpg)
 
-## What Can OmniGen do?
+## 4. What Can OmniGen do?
 OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, image editing, and image-conditioned generation.
-We showcase some examples in [inference.ipynb](inference.ipynb). And in [](), we show a insteresting pipeline to generate and modify a image.
+We showcase some examples in [inference.ipynb](inference.ipynb). And in [inference_demo.ipynb](inference_demo.ipynb), we show a insteresting pipeline to generate and modify a image.
+If you are not entirely satisfied with certain functionalities or wish to add new capabilities, you can try [fine-tuning OmniGen](#6-finetune).
+
+![demo](./imgs/demo_cases.png)
 
 
-![demo](/share/shitao/repos/OmniGen/imgs/demo_cases.png)
-
-
-## 4. Quick Start
+## 5. Quick Start
 
 
 ### Using OmniGen
@@ -106,14 +106,14 @@ images = pipe(
 images[0].save("example_ti2i.png")  # save output PIL image
 ```
 For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
-For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and []()
+For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
 
 
 ### Using Diffusers
 Coming soon.
 
 
-## 5. Gradio Demo
+### Gradio Demo
 
 We construct an online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
 
