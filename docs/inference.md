@@ -24,23 +24,27 @@ pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 
 # Text to Image
 images = pipe(
-    prompt="A woman holds a bouquet of flowers and faces the camera", 
+    prompt="A curly-haired man in a red shirt is drinking tea.", 
     height=1024, 
     width=1024, 
-    guidance_scale=3
-    )
-images[0].save("t2i.png")
+    guidance_scale=2.5,
+    seed=0,
+)
+images[0].save("example_t2i.png")  # save output PIL Image
 
 # Multi-modal to Image
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
 # You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
 images = pipe(
-    prompt="A woman holds a bouquet of flowers and faces the camera. Thw woman is <img><|image_1|></img>.", 
-    input_images=["./imgs/test_cases/liuyifei.png"], 
+    prompt="A man in a black shirt is reading a book. The man is the right man in <img><|image_1|></img>."
+    input_images=["./imgs/test_cases/two_man.jpg"]
     height=1024, 
     width=1024,
-    guidance_scale=2)
-images[0].save("ti2i.png")
+    separate_cfg_infer=False,  # if OOM, you can set separate_cfg_infer=True 
+    guidance_scale=2.5, 
+    img_guidance_scale=1.6
+)
+images[0].save("example_ti2i.png")  # save output PIL image
 ```
 
 Some important arguments:
@@ -83,8 +87,9 @@ python app.py
 
 
 ## Tips
-- OOM issue: If you encounter OOM issue, you can try to set `separate_cfg_infer=True`. This will reduce the memory usage but increase the generation speed. You also can reduce the size of the image, e.g., `height=768, width=512`.
+- OOM issue: If you encounter OOM issue, you can try to set `separate_cfg_infer=True`. This will reduce the memory usage but increase the generation latecy. You also can reduce the size of the image, e.g., `height=768, width=512`.
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
 - Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
 - Low-quality: More detailed prompt will lead to better results. Besides, larger size of the image (`height` and `width`) will also help.
 - Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.
+- Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.

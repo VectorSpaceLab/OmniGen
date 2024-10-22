@@ -20,8 +20,8 @@
     <p>
         <a href=#news>News</a> |
         <a href=#methodology>Methodology</a> |
+        <a href=#what-can-omnigen-do>Capabilities</a> |
         <a href=#quick-start>Quick Start</a> |
-        <a href=#gradio-demo>Gradio Demo</a> |
         <a href="#finetune">Finetune</a> |
         <a href="#license">License</a> |
         <a href="#citation">Citation</a>
@@ -32,21 +32,18 @@
 
 ## 1. Overview
 
-OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](inference.ipynb) so that everyone can explore more functionalities of OmniGen.
+OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#4-quick-start) so that everyone can explore more functionalities of OmniGen.
+Existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image. However, we believe that the future image generation paradigm should be more simple and flexible, that is, generating various images directly through arbitrarily multi-modal instructions without the need for additional plugins and operations, similar to how GPT works in language generation. [](#what-can-omnigen-do)
 
-In face, existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image.
-However, we believe that the future image generation paradigm should be more compact, simple, and flexible, that is, generating various images directly through arbitrarily interleaved multi-modal instructions without the need and cost for additional plugins and operations.
-<!-- We believe that future image generation models should be simpler, generating various images directly through instructions, similar to how GPT works in language generation. -->
+Due to the limited resources, OmniGen still has room for improvement. We will continue to optimize it, and hope it inspire more universal image generation models. You can also easily fine-tune OmniGen without worrying about designing networks for specific tasks; you just need to prepare the corresponding data, and then run the [script](#6-finetune). Imagination is no longer limited; everyone can construct any image generation task, and perhaps we can achieve very interesting, wonderful and creative things.
 
-Due to the limited resources, as a fundamental and beneficial exploration and demonstration, OmniGen still has huge room for improvement. We will continue to optimize it. You can also easily fine-tune OmniGen without worrying about designing networks for specific tasks; you just need to prepare the corresponding data, and then run the [script](docs/fine-tuning.md). Imagination is no longer limited; everyone can construct any image generation task, and perhaps we can achieve very interesting, wonderful and creative things.
-
-If you have any questions, ideas or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com, wangyueze@tju.edu.cn.
+If you have any questions, ideas or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com, wangyueze@tju.edu.cn, zhengliu1026@gmail.com.
 
 
 
 ## 2. News
-- 2024-10-22: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) :fire:
-- 2024-10-22: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  :fire:
+- 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
+- 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
 
 
 
@@ -55,21 +52,29 @@ If you have any questions, ideas or interesting tasks you want OmniGen to accomp
 You can see details in our [paper](https://arxiv.org/abs/2409.11340). 
 ![overall](imgs/overall.jpg)
 
+## What Can OmniGen do?
+OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, image editing, and image-conditioned generation.
+We showcase some examples in [inference.ipynb](inference.ipynb). And in [](), we show a insteresting pipeline to generate and modify a image.
+
+
+![demo](/share/shitao/repos/OmniGen/imgs/demo_cases.png)
 
 
 ## 4. Quick Start
 
 
 ### Using OmniGen
-Install:
+Install via Github(Recommend):
 ```bash
 git clone https://github.com/staoxiao/OmniGen.git
 cd OmniGen
 pip install -e .
 ```
+or via pypi:
+```bash
+pip install OmniGen
+```
 
-
-More functions can be seen in [inference.ipynb](inference.ipynb). 
 Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
@@ -78,28 +83,30 @@ pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
 
 # Text to Image
 images = pipe(
-    prompt="A woman holds a bouquet of flowers and faces the camera", 
+    prompt="A curly-haired man in a red shirt is drinking tea.", 
     height=1024, 
     width=1024, 
-    guidance_scale=3
-    )
-images[0].save("t2i_example.png")
+    guidance_scale=2.5,
+    seed=0,
+)
+images[0].save("example_t2i.png")  # save output PIL Image
 
 # Multi-modal to Image
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
 # You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
 images = pipe(
-    prompt="A woman holds a bouquet of flowers and faces the camera. Thw woman is <img><|image_1|></img>.", 
-    input_images=["./imgs/test_cases/liuyifei.png"], 
+    prompt="A man in a black shirt is reading a book. The man is the right man in <img><|image_1|></img>."
+    input_images=["./imgs/test_cases/two_man.jpg"]
     height=1024, 
     width=1024,
     separate_cfg_infer=False,  # if OOM, you can set separate_cfg_infer=True 
     guidance_scale=3, 
     img_guidance_scale=1.6
-    )
-images[0].save("ti2i_example.png")
+)
+images[0].save("example_ti2i.png")  # save output PIL image
 ```
-For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md).
+For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
+For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and []()
 
 
 ### Using Diffusers
@@ -108,7 +115,7 @@ Coming soon.
 
 ## 5. Gradio Demo
 
-We have constructed an online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
+We construct an online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
 
 For the local gradio demo, you can run:
 ```python
@@ -118,31 +125,29 @@ python app.py
 
 
 ## 6. Finetune
-We provide a train scrip `train.py` to fine-tune OmniGen. 
-Here is a toy example:
+We provide a training script `train.py` to fine-tune OmniGen. 
+Here is a toy example about LoRA finetune:
 ```bash
-accelerate launch  \
---num_processes=1 \
-train.py \
---model_name_or_path /share/shitao/projects/OmniGen/OmniGenv1 \
---batch_size_per_device 2 \
---condition_dropout_prob 0.01 \
---lr 1e-3 \
---use_lora \
---lora_rank 8 \
---json_file ./toy_data/toy_subject_data.jsonl \
---image_path ./toy_data/images \
---max_input_length_limit 18000 \
---keep_raw_resolution \
---max_image_size 1024 \
---gradient_accumulation_steps 1 \
---ckpt_every 10 \
---epochs 200 \
---log_every 1 \
---results_dir ./results/toy_finetune_lora
+accelerate launch --num_processes=1 train.py \
+    --model_name_or_path Shitao/OmniGen-v1 \
+    --batch_size_per_device 2 \
+    --condition_dropout_prob 0.01 \
+    --lr 1e-3 \
+    --use_lora \
+    --lora_rank 8 \
+    --json_file ./toy_data/toy_subject_data.jsonl \
+    --image_path ./toy_data/images \
+    --max_input_length_limit 18000 \
+    --keep_raw_resolution \
+    --max_image_size 1024 \
+    --gradient_accumulation_steps 1 \
+    --ckpt_every 10 \
+    --epochs 200 \
+    --log_every 1 \
+    --results_dir ./results/toy_finetune_lora
 ```
 
-Please refer to [docs/finetune.md](docs/finetune.md) for more details.
+Please refer to [docs/finetune.md](docs/finetune.md) for more details (e.g. full finetune).
 
 
 
@@ -151,7 +156,7 @@ This repo is licensed under the [MIT License](LICENSE).
 
 
 ## Citation
-
+If you find this repository useful, please consider giving a star ⭐ and citation
 ```
 @article{xiao2024omnigen,
   title={Omnigen: Unified image generation},
