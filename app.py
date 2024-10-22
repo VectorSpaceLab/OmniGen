@@ -82,7 +82,7 @@ def get_example():
         [
             "Two men are celebrating with raised glasses in a restaurant. A man is <img><|image_1|></img>. The other man is <img><|image_2|></img>.",
             "./imgs/test_cases/young_musk.jpg",
-            "./imgs/test_cases/img2.jpg",
+            "./imgs/test_cases/young_trump.jpeg",
             None,
             1024,
             1024,
@@ -167,7 +167,7 @@ OmniGen is a unified image generation model that you can use to perform various 
 
 For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>`.
 For example, use a image of a woman to generate a new image:
-prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is <img><|image_1|></img>."
+prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
 """
 
 # Gradio 接口
