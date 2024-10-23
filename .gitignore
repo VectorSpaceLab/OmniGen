@@ -163,3 +163,5 @@ cython_debug/
 
 # myfile
 .results/
+local.ipynb
+convert_to_safetensor.py

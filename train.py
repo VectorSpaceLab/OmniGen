@@ -23,6 +23,7 @@ from accelerate.utils import DistributedType
 from peft import LoraConfig, set_peft_model_state_dict, PeftModel, get_peft_model
 from peft.utils import get_peft_model_state_dict
 from huggingface_hub import snapshot_download
+from safetensors.torch import save_file
 
 from diffusers.models import AutoencoderKL
 

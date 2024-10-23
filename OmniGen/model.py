@@ -9,6 +9,7 @@ from typing import Dict
 from diffusers.loaders import PeftAdapterMixin
 from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
 from huggingface_hub import snapshot_download
+from safetensors.torch import load_file
 
 from OmniGen.transformer import Phi3Config, Phi3Transformer
 
@@ -187,14 +188,17 @@ class OmniGen(nn.Module, PeftAdapterMixin):
     
     @classmethod
     def from_pretrained(cls, model_name):
-        if not os.path.exists(os.path.join(model_name, 'model.pt')):
+        if not os.path.exists(model_name):
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
         config = Phi3Config.from_pretrained(model_name)
         model = cls(config)
-        ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
+        if os.path.exists(os.path.join(model_name, 'model.safetensors')):
+            ckpt = load_file(os.path.join(model_name, 'model.safetensors'))
+        else:
+            ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
         model.load_state_dict(ckpt)
         return model
 

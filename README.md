@@ -31,7 +31,7 @@
 
 ## 1. Overview
 
-OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#4-quick-start) so that everyone can explore more functionalities of OmniGen.
+OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#5-quick-start) so that everyone can explore more functionalities of OmniGen.
 
 Existing image generation models often require loading several additional network modules (such as ControlNet, IP-Adapter, Reference-Net, etc.) and performing extra preprocessing steps (e.g., face detection, pose estimation, cropping, etc.) to generate a satisfactory image. However, **we believe that the future image generation paradigm should be more simple and flexible, that is, generating various images directly through arbitrarily multi-modal instructions without the need for additional plugins and operations, similar to how GPT works in language generation.** 
 
@@ -119,8 +119,9 @@ Coming soon.
 
 We construct an online demo in [Huggingface](https://huggingface.co/spaces/Shitao/OmniGen).
 
-For the local gradio demo, you can run:
+For the local gradio demo, you need to install `pip install gradio spaces` , and then you can run:
 ```python
+pip install gradio spaces
 python app.py
 ```
 
