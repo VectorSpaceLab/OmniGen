@@ -196,6 +196,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         config = Phi3Config.from_pretrained(model_name)
         model = cls(config)
         if os.path.exists(os.path.join(model_name, 'model.safetensors')):
+            print("Loading safetensors")
             ckpt = load_file(os.path.join(model_name, 'model.safetensors'))
         else:
             ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
