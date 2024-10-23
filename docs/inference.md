@@ -93,3 +93,4 @@ python app.py
 - Low-quality: More detailed prompt will lead to better results. Besides, larger size of the image (`height` and `width`) will also help.
 - Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.
 - Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
+- For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`.
