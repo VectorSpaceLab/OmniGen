@@ -49,7 +49,7 @@ images[0].save("example_ti2i.png")  # save output PIL image
 
 Some important arguments:
 - `guidance_scale`: The strength of the guidance. Based on our experience, it is usually best to set it between 2 and 3. The higher the value, the more similar the generated image will be to the prompt. If the image appears oversaturated, please reduce the scale. 
-- `height` and `width`: The height and width of the generated image. The default value is 1024x1024. OmniGen support any size, but these number must dividid by 16.
+- `height` and `width`: The height and width of the generated image. The default value is 1024x1024. OmniGen support any size, but these number must be divisible by 16.
 - `num_inference_steps`: The number of steps to take in the diffusion process. The higher the value, the more detailed the generated image will be.
 - `separate_cfg_infer`: Whether to use separate inference process for CFG guidance. If set to True, memory cost will be lower but the generation speed will be slower. Default is False.
 - `use_kv_cache`: Whether to use key-value cache. Default is True.
