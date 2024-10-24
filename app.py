@@ -11,12 +11,13 @@ pipe = OmniGenPipeline.from_pretrained(
 
 @spaces.GPU(duration=120)
 # 示例处理函数：生成图像
-def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed):
+def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed, Quantization):
     input_images = [img1, img2, img3]
     # 去除 None
     input_images = [img for img in input_images if img is not None]
     if len(input_images) == 0:
         input_images = None
+
 
     output = pipe(
         prompt=text,
@@ -29,6 +30,7 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, infere
         separate_cfg_infer=True,
         use_kv_cache=False,
         seed=seed,
+        Quantization=Quantization,
     )
     img = output[0]
     return img
@@ -204,6 +206,10 @@ with gr.Blocks() as demo:
                 label="Inference Steps", minimum=1, maximum=100, value=50, step=1
             )
 
+            Quantization = gr.Checkbox(
+                label="Low VRAM (8-bit Quantization)", value=False
+            )
+
             seed_input = gr.Slider(
                 label="Seed", minimum=0, maximum=2147483647, value=42, step=1
             )
@@ -228,6 +234,7 @@ with gr.Blocks() as demo:
             guidance_scale_input,
             num_inference_steps,
             seed_input,
+            Quantization,
         ],
         outputs=output_image,
     )
@@ -245,6 +252,7 @@ with gr.Blocks() as demo:
             guidance_scale_input,
             num_inference_steps,
             seed_input,
+            Quantization,
         ],
         outputs=output_image,
     )

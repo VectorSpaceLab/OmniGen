@@ -5,6 +5,7 @@ import torch.nn as nn
 import numpy as np
 import math
 from typing import Dict
+import torch.nn.functional as F
 
 from diffusers.loaders import PeftAdapterMixin
 from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
@@ -16,7 +17,7 @@ from OmniGen.transformer import Phi3Config, Phi3Transformer
 
 def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
- 
+
 
 class TimestepEmbedder(nn.Module):
     """
@@ -149,19 +150,54 @@ class PatchEmbedMR(nn.Module):
         return x
 
 
+class Int8Quantized(nn.Module):
+    def __init__(self, tensor, scale_factor=None):
+        super().__init__()
+        if scale_factor is None:
+            max_val = torch.max(torch.abs(tensor))
+            scale_factor = max_val / 127.0
+        # Store quantized weights and scale factor
+        self.register_buffer('quantized_weight', torch.round(tensor / scale_factor).to(torch.int8))
+        self.register_buffer('scale_factor', torch.tensor(scale_factor))
+
+    def forward(self, dtype=None):
+        # Dequantize and convert to specified dtype
+        weight = self.quantized_weight.float() * self.scale_factor
+        if dtype is not None:
+            weight = weight.to(dtype)
+        return weight
+
+
+
+class QuantizedLinear(nn.Module):
+    def __init__(self, weight, bias=None):
+        super().__init__()
+        self.weight_quantized = Int8Quantized(weight)
+        if bias is not None:
+            self.register_buffer('bias', bias)
+        else:
+            self.bias = None
+
+    def forward(self, x):
+        # Dequantize weight to match input dtype
+        weight = self.weight_quantized(dtype=x.dtype)
+        return F.linear(x, weight, self.bias)
+
+
 class OmniGen(nn.Module, PeftAdapterMixin):
     """
     Diffusion model with a Transformer backbone.
     """
     def __init__(
         self,
-        transformer_config: Phi3Config,
+        transformer_config=Phi3Config,
         patch_size=2,
         in_channels=4,
         pe_interpolation: float = 1.0,
         pos_embed_max_size: int = 192,
     ):
         super().__init__()
+
         self.in_channels = in_channels
         self.out_channels = in_channels
         self.patch_size = patch_size
@@ -174,7 +210,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         self.time_token = TimestepEmbedder(hidden_size)
         self.t_embedder = TimestepEmbedder(hidden_size)
-        
+
         self.pe_interpolation = pe_interpolation
         pos_embed = get_2d_sincos_pos_embed(hidden_size, pos_embed_max_size, interpolation_scale=self.pe_interpolation, base_size=64)
         self.register_buffer("pos_embed", torch.from_numpy(pos_embed).float().unsqueeze(0), persistent=True)
@@ -185,7 +221,20 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         self.llm = Phi3Transformer(config=transformer_config)
         self.llm.config.use_cache = False
-    
+
+    def _quantize_module(self, module):
+        """
+        Quantize a module to 8-bit precision
+        """
+        for name, child in module.named_children():
+            if isinstance(child, nn.Linear):
+                setattr(module, name, QuantizedLinear(child.weight.data, child.bias.data if child.bias is not None else None))
+            elif isinstance(child, nn.LayerNorm):
+                # Skip quantization for LayerNorm
+                continue
+            else:
+                self._quantize_module(child)
+
     @classmethod
     def from_pretrained(cls, model_name):
         if not os.path.exists(model_name):
@@ -193,16 +242,28 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
+
         config = Phi3Config.from_pretrained(model_name)
+
         model = cls(config)
+
         if os.path.exists(os.path.join(model_name, 'model.safetensors')):
             print("Loading safetensors")
             ckpt = load_file(os.path.join(model_name, 'model.safetensors'))
         else:
             ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
-        model.load_state_dict(ckpt)
-        return model
 
+        # Load weights first
+        model.load_state_dict(ckpt)
+
+
+        if getattr(model, 'Quantization', True):
+            # Then quantize the weights
+            print("Quantizing weights to 8-bit...")
+            model._quantize_module(model.llm)
+
+
+        return model
     def initialize_weights(self):
         assert not hasattr(self, "llama")
 
