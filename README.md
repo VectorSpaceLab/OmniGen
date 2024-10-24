@@ -53,10 +53,16 @@ You can see details in our [paper](https://arxiv.org/abs/2409.11340).
 
 
 ## 4. What Can OmniGen do?
-![demo](./imgs/demo_cases.png)
+
 
 OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, image editing, and image-conditioned generation. **OmniGen don't need additional plugins or operations, it can automatically identify the features (e.g., required object, human pose, depth mapping) in input images according the text prompt.**
 We showcase some examples in [inference.ipynb](inference.ipynb). And in [inference_demo.ipynb](inference_demo.ipynb), we show an interesting pipeline to generate and modify a image.
+
+Here is the illustration of OmniGen's capabilities: 
+- You can control the image generation flexibly via OmniGen
+![demo](./imgs/demo_cases.png)
+- Referring Expression Generation: You can generate images by simply referring to objects, and OmniGen will automatically recognize the required objects in the image.
+![demo](./imgs/referring.png)
 
 If you are not entirely satisfied with certain functionalities or wish to add new capabilities, you can try [fine-tuning OmniGen](#6-finetune).
 
@@ -109,6 +115,8 @@ images[0].save("example_ti2i.png")  # save output PIL image
 ```
 For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
 For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
+
+Currently, the generation speed of OmniGen is not very fast. In our experiments (using one A800 GPU), the text-to-image task (1024x1024) takes approximately 40 seconds, and the text-and-image mixed instruction takes about 90 seconds (the speed can be improved by reducing the size of the input images). In fact, OmniGen has 3.8 billion parameters, leaving significant room for speed optimization. We will try to improve the model's efficiency, and welcome the contributions from the community.
 
 
 ### Using Diffusers

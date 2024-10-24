@@ -9,9 +9,9 @@ pipe = OmniGenPipeline.from_pretrained(
     "Shitao/OmniGen-v1"
 )
 
-@spaces.GPU(duration=120)
+@spaces.GPU(duration=180)
 # 示例处理函数：生成图像
-def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed):
+def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed):
     input_images = [img1, img2, img3]
     # 去除 None
     input_images = [img for img in input_images if img is not None]
@@ -26,7 +26,7 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, infere
         guidance_scale=guidance_scale,
         img_guidance_scale=1.6,
         num_inference_steps=inference_steps,
-        separate_cfg_infer=True,
+        separate_cfg_infer=True, # set False can speed up the inference process
         use_kv_cache=False,
         seed=seed,
     )
@@ -47,26 +47,28 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, infere
 def get_example():
     case = [
         [
-            "A vintage camera placed on the ground, ejecting a swirling cloud of Polaroid-style photographs into the air. The photos, showing landscapes, wildlife, and travel scenes, seem to defy gravity, floating upward in a vortex of motion. The camera emits a glowing, smoky light from within, enhancing the magical, surreal atmosphere. The dark background contrasts with the illuminated photos and camera, creating a dreamlike, nostalgic scene filled with vibrant colors and dynamic movement. Scattered photos are visible on the ground, further contributing to the idea of an explosion of captured memories.",
+            "A curly-haired man in a red shirt is drinking tea.",
             None,
             None,
             None,
             1024,
             1024,
             2.5,
+            1.6,
             50,
             0,
         ],
         [
-            "A woman <img><|image_1|></img> in a wedding dress. Next to her is a black-haired man.",
-            "./imgs/test_cases/yifei2.png",
+            "The woman in <img><|image_1|></img> waves her hand happily in the crowd",
+            "./imgs/test_cases/zhang.png",
             None,
             None,
             1024,
             1024,
             2.5,
+            1.9,
             50,
-            0,
+            128,
         ],
         [
             "A man in a black shirt is reading a book. The man is the right man in <img><|image_1|></img>.",
@@ -76,17 +78,55 @@ def get_example():
             1024,
             1024,
             2.5,
+            1.6,
             50,
             0,
         ],
         [
-            "Two men are celebrating with raised glasses in a restaurant. A man is <img><|image_1|></img>. The other man is <img><|image_2|></img>.",
-            "./imgs/test_cases/young_musk.jpg",
-            "./imgs/test_cases/young_trump.jpeg",
+            "Two woman are raising fried chicken legs in a bar. A woman is <img><|image_1|></img>. The other woman is <img><|image_2|></img>.",
+            "./imgs/test_cases/mckenna.jpg",
+            "./imgs/test_cases/Amanda.jpg",
             None,
             1024,
             1024,
             2.5,
+            1.8,
+            50,
+            168,
+        ],
+        [
+            "A man and a short-haired woman with a wrinkled face are standing in front of a bookshelf in a library. The man is the man in the middle of <img><|image_1|></img>, and the woman is oldest woman in <img><|image_2|></img>",
+            "./imgs/test_cases/1.jpg",
+            "./imgs/test_cases/2.jpg",
+            None,
+            1024,
+            1024,
+            2.5,
+            1.6,
+            50,
+            60,
+        ],
+        [
+            "A man and a woman are sitting at a classroom desk. The man is the man with yellow hair in <img><|image_1|></img>. The woman is the woman on the left of <img><|image_2|></img>",
+            "./imgs/test_cases/3.jpg",
+            "./imgs/test_cases/4.jpg",
+            None,
+            1024,
+            1024,
+            2.5,
+            1.8,
+            50,
+            66,
+        ],
+        [
+            "The flower <img><|image_1|><\/img> is placed in the vase which is in the middle of <img><|image_2|><\/img> on a wooden table of a living room",
+            "./imgs/test_cases/rose.jpg",
+            "./imgs/test_cases/vase.jpg",
+            None,
+            1024,
+            1024,
+            2.5,
+            1.6,
             50,
             0,
         ],
@@ -98,6 +138,7 @@ def get_example():
             1024,
             1024,
             2.5,
+            1.6,
             50,
             222,
         ],
@@ -109,6 +150,7 @@ def get_example():
             1024,
             1024,
             2.0,
+            1.6,
             50,
             0,
         ],
@@ -120,6 +162,7 @@ def get_example():
             1024,
             1024,
             2,
+            1.6,
             50,
             42,
         ],
@@ -131,8 +174,21 @@ def get_example():
             1024,
             1024,
             2.0,
+            1.6,
             50,
             123,
+        ],
+        [
+            "Following the depth mapping of this image <img><|image_1|><img>, generate a new photo: A young girl is sitting on a sofa in the library, holding a book. His hair is neatly combed, and a faint smile plays on his lips, with a few freckles scattered across his cheeks. The library is quiet, with rows of shelves filled with books stretching out behind him.",
+            "./imgs/demo_cases/edit.png",
+            None,
+            None,
+            1024,
+            1024,
+            2.0,
+            1.6,
+            50,
+            1,
         ],
         [
             "<img><|image_1|><\/img> What item can be used to see the current time? Please remove it.",
@@ -142,32 +198,41 @@ def get_example():
             1024,
             1024,
             2.5,
+            1.6,
             50,
             0,
         ],
         [
-            "Three guitars are displayed side by side on a rustic wooden stage, each showcasing its unique character and style. The left guitar is <img><|image_1|><\/img>. The middle guitar is <img><|image_2|><\/img>. The right guitars is <img><|image_3|><\/img>.",
-            "./imgs/test_cases/guitar1.png",
-            "./imgs/test_cases/guitar1.png",
-            "./imgs/test_cases/guitar1.png",
+            "According to the following examples, generate an output for the input.\nInput: <img><|image_1|></img>\nOutput: <img><|image_2|></img>\n\nInput: <img><|image_3|></img>\nOutput: ",
+            "./imgs/test_cases/icl1.jpg",
+            "./imgs/test_cases/icl2.jpg",
+            "./imgs/test_cases/icl3.jpg",
             1024,
             1024,
             2.5,
+            1.6,
             50,
-            0,
+            1,
         ],
     ]
     return case
 
-def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed):    
-    return generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed)
+def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed):    
+    return generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed)
 
 description = """
 OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, and image-conditioned generation.
 
-For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>`.
-For example, use a image of a woman to generate a new image:
+For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>` (for the first image, the placeholder is <img><|image_1|></img>. for the second image, the the placeholder is <img><|image_2|></img>).
+For example, use an image of a woman to generate a new image:
 prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
+
+Tips:
+- Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
+- Low-quality: More detailed prompt will lead to better results. 
+- Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.
+- Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
+- For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`.
 """
 
 # Gradio 接口
@@ -178,7 +243,7 @@ with gr.Blocks() as demo:
         with gr.Column():
             # 文本输入框
             prompt_input = gr.Textbox(
-                label="Enter your prompt, use <img><|image_i|></img> tokens for images", placeholder="Type your prompt here..."
+                label="Enter your prompt, use <img><|image_i|></img> to represent i-th input image", placeholder="Type your prompt here..."
             )
 
             with gr.Row(equal_height=True):
@@ -197,7 +262,11 @@ with gr.Blocks() as demo:
 
             # 引导尺度输入
             guidance_scale_input = gr.Slider(
-                label="Guidance Scale", minimum=1.0, maximum=10.0, value=3.0, step=0.1
+                label="Guidance Scale", minimum=1.0, maximum=5.0, value=2.5, step=0.1
+            )
+
+            img_guidance_scale_input = gr.Slider(
+                label="img_guidance_scale", minimum=1.0, maximum=2.0, value=1.6, step=0.1
             )
 
             num_inference_steps = gr.Slider(
@@ -226,6 +295,7 @@ with gr.Blocks() as demo:
             height_input,
             width_input,
             guidance_scale_input,
+            img_guidance_scale,
             num_inference_steps,
             seed_input,
         ],
@@ -243,6 +313,7 @@ with gr.Blocks() as demo:
             height_input,
             width_input,
             guidance_scale_input,
+            img_guidance_scale,
             num_inference_steps,
             seed_input,
         ],
