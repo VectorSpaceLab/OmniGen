@@ -53,7 +53,16 @@ class OmniGenPipeline:
         self.model = model
         self.processor = processor
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif is_torch_npu_available():
+            self.device = torch.device("npu")
+        else:
+            logger.info("Don't detect any available devices, using CPU instead")
+            self.device = torch.device("cpu")
+
         self.model.to(self.device)
         self.model.eval()
         self.vae.to(self.device)
