@@ -59,9 +59,9 @@ OmniGen is a unified image generation model that you can use to perform various 
 We showcase some examples in [inference.ipynb](inference.ipynb). And in [inference_demo.ipynb](inference_demo.ipynb), we show an interesting pipeline to generate and modify a image.
 
 Here is the illustration of OmniGen's capabilities: 
-- You can generate images and edit images flexibly via OmniGen
+- You can control the image generation flexibly via OmniGen
 ![demo](./imgs/demo_cases.png)
-- You can generate images by simply referring to objects, and OmniGen will automatically recognize the required objects in the image.
+- Referring Expression Generation: You can generate images by simply referring to objects, and OmniGen will automatically recognize the required objects in the image.
 ![demo](./imgs/referring.png)
 
 If you are not entirely satisfied with certain functionalities or wish to add new capabilities, you can try [fine-tuning OmniGen](#6-finetune).
