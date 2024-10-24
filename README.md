@@ -150,7 +150,7 @@ accelerate launch --num_processes=1 train.py \
     --results_dir ./results/toy_finetune_lora
 ```
 
-Please refer to [docs/finetune.md](docs/finetune.md) for more details (e.g. full finetune).
+Please refer to [docs/fine-tuning.md](docs/fine-tuning.md) for more details (e.g. full finetune).
 
 
 
