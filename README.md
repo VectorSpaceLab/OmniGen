@@ -116,7 +116,7 @@ images[0].save("example_ti2i.png")  # save output PIL image
 For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
 For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
 
-Currently, the generation speed of OmniGen is not very fast. In our experiments (using one A800 GPU), the text-to-image task (1024x1024) takes approximately 40 seconds, and the text-and-image mixed instruction takes about 90 seconds (the speed can be improved by reducing the size of the input images). In fact, OmniGen has 3.8 billion parameters, leaving significant room for speed optimization. We will try to improve the model's efficiency, and welcome the contributions from the community.
+Currently, the generation speed of OmniGen is not very fast. In our experiments (using one A800 GPU), the text-to-image task (1024x1024) takes approximately 30 seconds, and the text-and-image mixed instruction takes about 90 seconds (the speed can be improved by reducing the size of the input images). In fact, OmniGen has 3.8 billion parameters, leaving significant room for speed optimization. We will try to improve the model's efficiency, and welcome the contributions from the community.
 
 
 ### Using Diffusers
