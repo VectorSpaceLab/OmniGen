@@ -72,16 +72,12 @@ If you are not entirely satisfied with certain functionalities or wish to add ne
 
 
 ### Using OmniGen
-Install via Github(Recommend):
+Install via Github:
 ```bash
 git clone https://github.com/staoxiao/OmniGen.git
 cd OmniGen
 pip install -e .
-```
-or via pypi:
-```bash
-pip install OmniGen
-```
+
 
 Here are some examples:
 ```python
