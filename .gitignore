@@ -167,3 +167,5 @@ local.ipynb
 convert_to_safetensor.py
 ttt.ipynb
 imgs/ttt/
+
+.DS_STORE

@@ -1,6 +1,7 @@
 import gradio as gr
 from PIL import Image
 import os
+from datetime import datetime
 import spaces
 
 from OmniGen import OmniGenPipeline
@@ -31,6 +32,17 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_gu
         seed=seed,
     )
     img = output[0]
+    
+    # Create outputs directory if it doesn't exist
+    os.makedirs('outputs', exist_ok=True)
+    
+    # Generate unique filename with timestamp
+    timestamp = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+    output_path = os.path.join('outputs', f'{timestamp}.png')
+    
+    # Save the image
+    img.save(output_path)
+    
     return img
 # def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps):
 #     input_images = []
