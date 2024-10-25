@@ -77,7 +77,7 @@ Install via Github:
 git clone https://github.com/staoxiao/OmniGen.git
 cd OmniGen
 pip install -e .
-
+```
 
 Here are some examples:
 ```python
