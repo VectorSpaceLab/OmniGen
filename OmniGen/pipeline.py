@@ -59,21 +59,17 @@ class OmniGenPipeline:
         self.vae.to(self.device)
 
     @classmethod
-    def from_pretrained(cls, model_name, vae_path: str=None):
+    def from_pretrained(cls, model_name, vae_path: str=None, Quantization: bool=False):
         if not os.path.exists(model_name) or (not os.path.exists(os.path.join(model_name, 'model.safetensors')) and model_name == "Shitao/OmniGen-v1"):
             logger.info("Model not found, downloading...")
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
-                                           cache_dir=cache_folder,
-                                           ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5', 'model.pt'])
+                                        cache_dir=cache_folder,
+                                        ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5', 'model.pt'])
             logger.info(f"Downloaded model to {model_name}")
-        model = OmniGen.from_pretrained(model_name)
 
-
-        #this desides if the quntisation is on or off
-        Quantization = True
-        model.Quantization = Quantization
-
+        # Pass Quantization parameter to OmniGen's from_pretrained
+        model = OmniGen.from_pretrained(model_name, quantize=Quantization)
 
         processor = OmniGenProcessor.from_pretrained(model_name)
 
@@ -86,6 +82,8 @@ class OmniGenPipeline:
             vae = AutoencoderKL.from_pretrained("stabilityai/sdxl-vae")
 
         return cls(vae, model, processor)
+
+
 
     def merge_lora(self, lora_path: str):
         model = PeftModel.from_pretrained(self.model, lora_path)
@@ -194,18 +192,29 @@ class OmniGenPipeline:
         latents = torch.randn(num_prompt, 4, latent_size_h, latent_size_w, device=self.device, generator=generator)
         latents = torch.cat([latents] * (1 + num_cfg), 0).to(dtype)
 
+
+        # Load VAE into VRAM (GPU) in bfloat16
+        self.vae.to(self.device, dtype=torch.bfloat16)
+
+
+
+
         input_img_latents = []
         if separate_cfg_infer:
             for temp_pixel_values in input_data['input_pixel_values']:
                 temp_input_latents = []
                 for img in temp_pixel_values:
-                    img = self.vae_encode(img.to(self.device), dtype)
+                    img = self.vae_encode(img.to(self.device, dtype=torch.bfloat16), dtype)
+
                     temp_input_latents.append(img)
                 input_img_latents.append(temp_input_latents)
         else:
             for img in input_data['input_pixel_values']:
-                img = self.vae_encode(img.to(self.device), dtype)
+                img = self.vae_encode(img.to(self.device, dtype=torch.bfloat16), dtype)
+
                 input_img_latents.append(img)
+
+
 
         model_kwargs = dict(input_ids=self.move_to_device(input_data['input_ids']),
             input_img_latents=input_img_latents,
@@ -216,6 +225,14 @@ class OmniGenPipeline:
             img_cfg_scale=img_guidance_scale,
             use_img_cfg=use_img_guidance,
             use_kv_cache=use_kv_cache)
+
+
+        #unlode vae to cpu
+        self.vae.to('cpu')
+        torch.cuda.empty_cache()  # Clear VRAM
+        gc.collect()  # Run garbage collection to free system RAM
+
+
 
         if separate_cfg_infer:
             func = self.model.forward_with_separate_cfg
