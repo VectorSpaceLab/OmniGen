@@ -236,15 +236,14 @@ class OmniGen(nn.Module, PeftAdapterMixin):
                 self._quantize_module(child)
 
     @classmethod
-    def from_pretrained(cls, model_name):
+    def from_pretrained(cls, model_name, quantize=False):  # Add quantize parameter
         if not os.path.exists(model_name):
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
-                                           cache_dir=cache_folder,
-                                           ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
+                                        cache_dir=cache_folder,
+                                        ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
 
         config = Phi3Config.from_pretrained(model_name)
-
         model = cls(config)
 
         if os.path.exists(os.path.join(model_name, 'model.safetensors')):
@@ -256,12 +255,10 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         # Load weights first
         model.load_state_dict(ckpt)
 
-
-        if getattr(model, 'Quantization', True):
-            # Then quantize the weights
+        # Only quantize if explicitly requested
+        if quantize:
             print("Quantizing weights to 8-bit...")
             model._quantize_module(model.llm)
-
 
         return model
     def initialize_weights(self):
