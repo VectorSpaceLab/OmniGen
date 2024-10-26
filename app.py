@@ -2,23 +2,52 @@ import gradio as gr
 from PIL import Image
 import os
 import spaces
+from threading import Lock
 
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained(
-    "Shitao/OmniGen-v1"
-)
+class OmniGenManager:
+    def __init__(self):
+        self.pipe = None
+        self.lock = Lock()
+        self.current_quantization = None
+
+    def get_pipeline(self, quantization: bool) -> OmniGenPipeline:
+        """
+        Get or initialize the pipeline with the specified quantization setting.
+        Uses a lock to ensure thread safety.
+        """
+        with self.lock:
+            # Only reinitialize if quantization setting changed or pipeline doesn't exist
+            if self.pipe is None or self.current_quantization != quantization:
+                # Clear any existing pipeline
+                if self.pipe is not None:
+                    del self.pipe
+                    self.pipe = None
+
+                # Initialize new pipeline
+                self.pipe = OmniGenPipeline.from_pretrained(
+                    "Shitao/OmniGen-v1",
+                    Quantization=quantization
+                )
+                self.current_quantization = quantization
+
+            return self.pipe
+
+# Create a single instance of the manager
+pipeline_manager = OmniGenManager()
 
 @spaces.GPU(duration=120)
-# 示例处理函数：生成图像
-def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed, Quantization):
-    input_images = [img1, img2, img3]
-    # 去除 None
-    input_images = [img for img in input_images if img is not None]
-    if len(input_images) == 0:
+def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed, quantization):
+    # Process input images
+    input_images = [img for img in [img1, img2, img3] if img is not None]
+    if not input_images:
         input_images = None
 
+    # Get or initialize pipeline with current settings
+    pipe = pipeline_manager.get_pipeline(quantization)
 
+    # Generate image
     output = pipe(
         prompt=text,
         input_images=input_images,
@@ -30,10 +59,10 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, infere
         separate_cfg_infer=True,
         use_kv_cache=False,
         seed=seed,
-        Quantization=Quantization,
     )
-    img = output[0]
-    return img
+
+    return output[0]
+
 # def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps):
 #     input_images = []
 #     if img1:
