@@ -38,7 +38,7 @@ class OmniGenManager:
 pipeline_manager = OmniGenManager()
 
 @spaces.GPU(duration=180)
-def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed, quantization):
+def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, quantization):
     # Process input images
     input_images = [img for img in [img1, img2, img3] if img is not None]
     if not input_images:
@@ -54,7 +54,7 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, infere
         height=height,
         width=width,
         guidance_scale=guidance_scale,
-        img_guidance_scale=1.6,
+        img_guidance_scale=img_guidance_scale,
         num_inference_steps=inference_steps,
         separate_cfg_infer=True,
         use_kv_cache=False,
