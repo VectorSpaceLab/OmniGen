@@ -37,7 +37,7 @@ class OmniGenManager:
 # Create a single instance of the manager
 pipeline_manager = OmniGenManager()
 
-@spaces.GPU(duration=120)
+@spaces.GPU(duration=180)
 def generate_image(text, img1, img2, img3, height, width, guidance_scale, inference_steps, seed, quantization):
     # Process input images
     input_images = [img for img in [img1, img2, img3] if img is not None]
