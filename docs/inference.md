@@ -112,7 +112,7 @@ as input image. For example, if you want to edit a 512x512 image, you should set
 
 We are currently experimenting with some techniques to reduce memory usage and improve speed, including `use_kv_cache, offload_kv_cache, separate_cfg_infer, offload_model`, which you can enable in the pipeline. 
 The default setting is`use_kv_cache=True, offload_kv_cache=True, separate_cfg_infer=True, offload_model=False`. 
-
+To reduce memory consumption while maintaining inference speed, quantization is also a method worth exploring and is left for future work.
 
 We conducted experiments on the A800 and RTX 3090. The memory requirements and inference times are shown in the table below. You can choose the appropriate settings based on your available resources.
 
@@ -165,5 +165,3 @@ For RTX 3090 GPU(24G):
 | use_kv_cache,offload_kv_cache,separate_cfg_infer | 9G, 1m18s   | 12G, 2m46s  | 13G, 3m21s  |
 | use_kv_cache,offload_kv_cache,offload_model | 4G,3m1s    | 7G, 4m14s  | 11G, 5m4s  |
 | use_kv_cache,offload_kv_cache,separate_cfg_infer,offload_model | 3G, 4m56s   | 5G, 7m49s   | 6G, 8m6s |
-
-Overall, the text-to-image task only requires minimal memory and time cost, but when input images are used, the computational cost increases. You can reduce memory usage by extending the processing time.
