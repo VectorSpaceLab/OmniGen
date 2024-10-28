@@ -18,7 +18,7 @@
 
 <h4 align="center">
     <p>
-        <a href=#2-news>News</a> |
+        <a href=#1-news>News</a> |
         <a href=#3-methodology>Methodology</a> |
         <a href=#4-what-can-omnigen-do>Capabilities</a> |
         <a href=#5-quick-start>Quick Start</a> |
@@ -29,7 +29,14 @@
 </h4>
 
 
-## 1. Overview
+
+## 1. News
+- 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
+- 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
+- 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
+
+
+## 2. Overview
 
 OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#5-quick-start) so that everyone can explore more functionalities of OmniGen.
 
@@ -39,12 +46,6 @@ Due to the limited resources, OmniGen still has room for improvement. We will co
 
 If you have any questions, ideas or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com, wangyueze@tju.edu.cn, zhengliu1026@gmail.com. We welcome any feedback to help us improve the model.
 
-
-
-## 2. News
-- 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
-- 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
-- 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
 
 
 
@@ -62,7 +63,7 @@ We showcase some examples in [inference.ipynb](inference.ipynb). And in [inferen
 Here is the illustration of OmniGen's capabilities: 
 - You can control the image generation flexibly via OmniGen
 ![demo](./imgs/demo_cases.png)
-- Referring Expression Generation: You can generate images by simply referring to objects, and OmniGen will automatically recognize the required objects in the image.
+- Referring Expression Generation: You can input multiple images and use simple, general language to refer to the objects within those images. OmniGen can automatically recognize the necessary objects in each image and generate new images based on them. No additional operations, such as image cropping or face detection, are required.
 ![demo](./imgs/referring.png)
 
 If you are not entirely satisfied with certain functionalities or wish to add new capabilities, you can try [fine-tuning OmniGen](#6-finetune).

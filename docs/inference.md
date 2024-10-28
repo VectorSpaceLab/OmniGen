@@ -116,6 +116,8 @@ The default setting is`use_kv_cache=True, offload_kv_cache=True, separate_cfg_in
 
 We conducted experiments on the A800 and RTX 3090. The memory requirements and inference times are shown in the table below. You can choose the appropriate settings based on your available resources.
 
+**Overall, the text-to-image task requires minimal memory and time costs, comparable to other latest text-to-image models. However, when using input images, the computational cost increases. Memory usage can be reduced by extending the processing time.**
+
 
 - Different image size. 
 
@@ -129,7 +131,7 @@ For A800 GPU:
 | max_input_image_size=768,height=768,width=768 | 9G, 16s  | 10G, 32s  | 10G, 37s  |
 | max_input_image_size=512,height=512,width=512 | 9G, 7s   | 9G, 14s  | 9G, 15s  |
 
-For RTX 3090 GPU:
+For RTX 3090 GPU(24G):
 | Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
 |:-------------|:----------:|:-------------------:|:---------------------:|
 | max_input_image_size=1024,height=1024,width=1024 | 9G, 1m17s   | 12G, 2m46s  | 13G, 3m23s  |
@@ -155,7 +157,7 @@ For A800 GPU:
 | use_kv_cache,offload_kv_cache,offload_model | 4G, 55s   | 7G, 1m30s  | 11G, 1m48s  |
 | use_kv_cache,offload_kv_cache,separate_cfg_infer,offload_model | 3G, 1m23s   | 5G, 2m19s   | 6G, 2m30s |
 
-For RTX 3090 GPU:
+For RTX 3090 GPU(24G):
 | Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
 |:-------------|:----------:|:-------------------:|:---------------------:|
 | use_kv_cache | 18G, 1m14s   | OOM  | OOM  |

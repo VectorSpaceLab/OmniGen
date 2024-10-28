@@ -339,13 +339,13 @@ with gr.Blocks() as demo:
             )
 
             separate_cfg_infer = gr.Checkbox(
-                label="separate_cfg_infer", info="Whether to use separate inference process for different guidance. ", value=True,
+                label="separate_cfg_infer", info="Whether to use separate inference process for different guidance. This will reduce the memory cost.", value=True,
             )
             offload_model = gr.Checkbox(
-                label="offload_model", info="Offload model to CPU, which will significantly reduce the memory cost but slow down the generation speed. Set both it and separate_cfg_infer be True will further reduce the memory, but slower generation.", value=False,
+                label="offload_model", info="Offload model to CPU, which will significantly reduce the memory cost but slow down the generation speed. You can cancle separate_cfg_infer and set offload_model=True. If both separate_cfg_infer and offload_model be True, further reduce the memory, but slowest generation", value=False,
             )
             use_input_image_size_as_output = gr.Checkbox(
-                label="use_input_image_size_as_output", info="Automatically adjust the output image size to be same as input image size. For editing and controlnet task, make sure the output image has the same size with input image leading to better performance", value=False,
+                label="use_input_image_size_as_output", info="Automatically adjust the output image size to be same as input image size. For editing and controlnet task, it can make sure the output image has the same size with input image leading to better performance", value=False,
             )
 
             # generate
