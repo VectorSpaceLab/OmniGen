@@ -312,7 +312,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         return latents, num_tokens, shapes
 
     
-    def forward(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None, return_past_key_values=True):
+    def forward(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, padding_latent=None, past_key_values=None, return_past_key_values=True, offload_model:bool=False):
         """
         
         """
@@ -335,7 +335,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             input_emb = torch.cat([condition_embeds, time_token, x], dim=1)
         else:
             input_emb = torch.cat([time_token, x], dim=1)
-        output = self.llm(inputs_embeds=input_emb, attention_mask=attention_mask, position_ids=position_ids, past_key_values=past_key_values)
+        output = self.llm(inputs_embeds=input_emb, attention_mask=attention_mask, position_ids=position_ids, past_key_values=past_key_values, offload_model=offload_model)
         output, past_key_values = output.last_hidden_state, output.past_key_values
         if input_is_list:
             image_embedding = output[:, -max(num_tokens):]
@@ -357,12 +357,9 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         return latents
 
     @torch.no_grad()
-    def forward_with_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache):
-        """
-        Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
-        """        
+    def forward_with_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache, offload_model):      
         self.llm.config.use_cache = use_kv_cache
-        model_out, past_key_values = self.forward(x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, past_key_values=past_key_values, return_past_key_values=True)
+        model_out, past_key_values = self.forward(x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, past_key_values=past_key_values, return_past_key_values=True, offload_model=offload_model)
         if use_img_cfg:
             cond, uncond, img_cond = torch.split(model_out, len(model_out) // 3, dim=0)
             cond = uncond + img_cfg_scale * (img_cond - uncond) + cfg_scale * (cond - img_cond)
@@ -376,10 +373,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
 
     @torch.no_grad()
-    def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache, return_past_key_values=True):
-        """
-        Forward pass of DiT, but also batches the unconditional forward pass for classifier-free guidance.
-        """        
+    def forward_with_separate_cfg(self, x, timestep, input_ids, input_img_latents, input_image_sizes, attention_mask, position_ids, cfg_scale, use_img_cfg, img_cfg_scale, past_key_values, use_kv_cache, offload_model):
         self.llm.config.use_cache = use_kv_cache
         if past_key_values is None:
             past_key_values = [None] * len(attention_mask)
@@ -390,7 +384,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         model_out, pask_key_values = [], []
         for i in range(len(input_ids)):
-            temp_out, temp_pask_key_values = self.forward(x[i], timestep[i], input_ids[i], input_img_latents[i], input_image_sizes[i], attention_mask[i], position_ids[i], past_key_values[i])
+            temp_out, temp_pask_key_values = self.forward(x[i], timestep[i], input_ids[i], input_img_latents[i], input_image_sizes[i], attention_mask[i], position_ids[i], past_key_values=past_key_values[i], return_past_key_values=True, offload_model=offload_model)
             model_out.append(temp_out)
             pask_key_values.append(temp_pask_key_values)
 

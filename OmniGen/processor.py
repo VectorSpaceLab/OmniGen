@@ -108,6 +108,7 @@ class OmniGenProcessor:
                 negative_prompt: str = "low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers.",
                 use_img_cfg: bool = True,
                 separate_cfg_input: bool = False,
+                use_input_image_size_as_output: bool=False,
                 ) -> Dict:
 
         if input_images is None:
@@ -138,7 +139,10 @@ class OmniGenProcessor:
                 else:
                     img_cfg_mllm_input = neg_mllm_input
 
-            input_data.append((mllm_input, neg_mllm_input, img_cfg_mllm_input, [height, width]))
+            if use_input_image_size_as_output:
+                input_data.append((mllm_input, neg_mllm_input, img_cfg_mllm_input, [mllm_input['pixel_values'][0].size(-2), mllm_input['pixel_values'][0].size(-1)]))
+            else:
+                input_data.append((mllm_input, neg_mllm_input, img_cfg_mllm_input, [height, width]))
 
         if separate_cfg_input:
             return self.separate_collator(input_data)
@@ -295,7 +299,6 @@ class OmniGenSeparateCollator(OmniGenCollator):
         cfg_mllm_inputs = [f[1] for f in features]
         img_cfg_mllm_input = [f[2] for f in features]
         target_img_size = [f[3] for f in features]
-
         
         all_padded_input_ids, all_attention_mask, all_position_ids, all_pixel_values, all_image_sizes, all_padding_images = [], [], [], [], [], []
 

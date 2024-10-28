@@ -18,7 +18,7 @@
 
 <h4 align="center">
     <p>
-        <a href=#2-news>News</a> |
+        <a href=#1-news>News</a> |
         <a href=#3-methodology>Methodology</a> |
         <a href=#4-what-can-omnigen-do>Capabilities</a> |
         <a href=#5-quick-start>Quick Start</a> |
@@ -29,7 +29,14 @@
 </h4>
 
 
-## 1. Overview
+
+## 1. News
+- 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
+- 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
+- 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
+
+
+## 2. Overview
 
 OmniGen is a unified image generation model that can generate a wide range of images from multi-modal prompts. It is designed to be simple, flexible and easy to use. We provide [inference code](#5-quick-start) so that everyone can explore more functionalities of OmniGen.
 
@@ -39,11 +46,6 @@ Due to the limited resources, OmniGen still has room for improvement. We will co
 
 If you have any questions, ideas or interesting tasks you want OmniGen to accomplish, feel free to discuss with us: 2906698981@qq.com, wangyueze@tju.edu.cn, zhengliu1026@gmail.com. We welcome any feedback to help us improve the model.
 
-
-
-## 2. News
-- 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
-- 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
 
 
 
@@ -61,7 +63,7 @@ We showcase some examples in [inference.ipynb](inference.ipynb). And in [inferen
 Here is the illustration of OmniGen's capabilities: 
 - You can control the image generation flexibly via OmniGen
 ![demo](./imgs/demo_cases.png)
-- Referring Expression Generation: You can generate images by simply referring to objects, and OmniGen will automatically recognize the required objects in the image.
+- Referring Expression Generation: You can input multiple images and use simple, general language to refer to the objects within those images. OmniGen can automatically recognize the necessary objects in each image and generate new images based on them. No additional operations, such as image cropping or face detection, are required.
 ![demo](./imgs/referring.png)
 
 If you are not entirely satisfied with certain functionalities or wish to add new capabilities, you can try [fine-tuning OmniGen](#6-finetune).
@@ -103,16 +105,15 @@ images = pipe(
     input_images=["./imgs/test_cases/two_man.jpg"],
     height=1024, 
     width=1024,
-    separate_cfg_infer=False,  # if OOM, you can set separate_cfg_infer=True 
-    guidance_scale=3, 
-    img_guidance_scale=1.6
+    guidance_scale=2.5, 
+    img_guidance_scale=1.6,
+    seed=0
 )
 images[0].save("example_ti2i.png")  # save output PIL image
 ```
-For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
-For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
-
-Currently, the generation speed of OmniGen is not very fast. In our experiments (using one A800 GPU), the text-to-image task (1024x1024) takes approximately 30 seconds, and the text-and-image mixed instruction takes about 90 seconds (the speed can be improved by reducing the size of the input images). In fact, OmniGen has 3.8 billion parameters, leaving significant room for speed optimization. We will try to improve the model's efficiency, and welcome the contributions from the community.
+- If out of memory, you can set `offload_model=True`. If inference time is too long when input multiple images, you can reduce the `max_input_image_size`.  For thre required resources and the method to run OmniGen efficiently, please refer to [docs/inference.md#requiremented-resources](docs/inference.md#requiremented-resources).
+- For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
+- For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
 
 
 ### Using Diffusers
