@@ -104,7 +104,7 @@ def get_example():
             True,
             False,
             False,
-            768,
+            1024,
         ],
         [
             "A man and a short-haired woman with a wrinkled face are standing in front of a bookshelf in a library. The man is the man in the middle of <img><|image_1|></img>, and the woman is oldest woman in <img><|image_2|></img>",
@@ -120,7 +120,7 @@ def get_example():
             True,
             False,
             False,
-            768,
+            1024,
         ],
         [
             "A man and a woman are sitting at a classroom desk. The man is the man with yellow hair in <img><|image_1|></img>. The woman is the woman on the left of <img><|image_2|></img>",
@@ -136,7 +136,7 @@ def get_example():
             True,
             False,
             False,
-            768,
+            1024,
         ],
         [
             "The flower <img><|image_1|><\/img> is placed in the vase which is in the middle of <img><|image_2|><\/img> on a wooden table of a living room",
@@ -152,7 +152,7 @@ def get_example():
             True,
             False,
             False,
-            768,
+            1024,
         ],
         [
             "<img><|image_1|><img>\n Remove the woman's earrings. Replace the mug with a clear glass filled with sparkling iced cola.",
