@@ -165,5 +165,4 @@ cython_debug/
 .results/
 local.ipynb
 convert_to_safetensor.py
-ttt.ipynb
-imgs/ttt/
+test_memory_time.py

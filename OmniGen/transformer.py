@@ -29,6 +29,34 @@ class Phi3Transformer(Phi3Model):
     Args:
         config: Phi3Config
     """
+    def prefetch_layer(self, layer_idx: int, device: torch.device):
+        "Starts prefetching the next layer cache"
+        with torch.cuda.stream(self.prefetch_stream):
+            # Prefetch next layer tensors to GPU
+            for name, param in self.layers[layer_idx].named_parameters():
+                param.data = param.data.to(device, non_blocking=True)
+
+    def evict_previous_layer(self, layer_idx: int):
+        "Moves the previous layer cache to the CPU"
+        prev_layer_idx = layer_idx - 1
+        for name, param in self.layers[prev_layer_idx].named_parameters():
+            param.data = param.data.to("cpu", non_blocking=True)
+            
+    def get_offlaod_layer(self, layer_idx: int, device: torch.device):
+        # init stream
+        if not hasattr(self, "prefetch_stream"):
+            self.prefetch_stream = torch.cuda.Stream()
+
+        # delete previous layer
+        torch.cuda.current_stream().synchronize()
+        self.evict_previous_layer(layer_idx)
+        
+        # make sure the current layer is ready
+        torch.cuda.synchronize(self.prefetch_stream)
+
+        # load next layer
+        self.prefetch_layer((layer_idx + 1) % len(self.layers), device)
+        
 
     def forward(
         self,
@@ -42,6 +70,7 @@ class Phi3Transformer(Phi3Model):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
         cache_position: Optional[torch.LongTensor] = None,
+        offload_model: Optional[bool] = False,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -75,16 +104,16 @@ class Phi3Transformer(Phi3Model):
                     "(https://huggingface.co/docs/transformers/kv_cache#legacy-cache-format)"
                 )
 
-        if inputs_embeds is None:
-            inputs_embeds = self.embed_tokens(input_ids)
+        # if inputs_embeds is None:
+        #     inputs_embeds = self.embed_tokens(input_ids)
 
-        if cache_position is None:
-            past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
-            cache_position = torch.arange(
-                past_seen_tokens, past_seen_tokens + inputs_embeds.shape[1], device=inputs_embeds.device
-            )
-        if position_ids is None:
-            position_ids = cache_position.unsqueeze(0)
+        # if cache_position is None:
+        #     past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
+        #     cache_position = torch.arange(
+        #         past_seen_tokens, past_seen_tokens + inputs_embeds.shape[1], device=inputs_embeds.device
+        #     )
+        # if position_ids is None:
+        #     position_ids = cache_position.unsqueeze(0)
 
         if attention_mask is not None and attention_mask.dim() == 3:
             dtype = inputs_embeds.dtype
@@ -104,7 +133,10 @@ class Phi3Transformer(Phi3Model):
         all_self_attns = () if output_attentions else None
         next_decoder_cache = None
 
+        layer_idx = -1
         for decoder_layer in self.layers:
+            layer_idx += 1
+
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
@@ -120,6 +152,8 @@ class Phi3Transformer(Phi3Model):
                     cache_position,
                 )
             else:
+                if offload_model and not self.training:
+                    self.get_offlaod_layer(layer_idx, device=inputs_embeds.device)
                 layer_outputs = decoder_layer(
                     hidden_states,
                     attention_mask=attention_mask,
@@ -142,6 +176,7 @@ class Phi3Transformer(Phi3Model):
 
         # add hidden states from the last decoder layer
         if output_hidden_states:
+            print('************')
             all_hidden_states += (hidden_states,)
 
         next_cache = next_decoder_cache if use_cache else None
