@@ -10,9 +10,9 @@ pipe = OmniGenPipeline.from_pretrained(
     "Shitao/OmniGen-v1"
 )
 
-@spaces.GPU(duration=180)
+@spaces.GPU(duration=160)
 def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
-            use_input_image_size_as_output):
+            use_input_image_size_as_output, max_input_image_size):
     input_images = [img1, img2, img3]
     # Delete None
     input_images = [img for img in input_images if img is not None]
@@ -33,6 +33,7 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_gu
         offload_model=offload_model,
         use_input_image_size_as_output=use_input_image_size_as_output,
         seed=seed,
+        max_input_image_size=max_input_image_size,
     )
     img = output[0]
     return img
@@ -55,6 +56,7 @@ def get_example():
             True,
             False,
             False,
+            1024,
         ],
         [
             "The woman in <img><|image_1|></img> waves her hand happily in the crowd",
@@ -70,6 +72,7 @@ def get_example():
             True,
             False,
             False,
+            1024,
         ],
         [
             "A man in a black shirt is reading a book. The man is the right man in <img><|image_1|></img>.",
@@ -85,6 +88,7 @@ def get_example():
             True,
             False,
             False,
+            1024,
         ],
         [
             "Two woman are raising fried chicken legs in a bar. A woman is <img><|image_1|></img>. The other woman is <img><|image_2|></img>.",
@@ -100,6 +104,7 @@ def get_example():
             True,
             False,
             False,
+            768,
         ],
         [
             "A man and a short-haired woman with a wrinkled face are standing in front of a bookshelf in a library. The man is the man in the middle of <img><|image_1|></img>, and the woman is oldest woman in <img><|image_2|></img>",
@@ -115,6 +120,7 @@ def get_example():
             True,
             False,
             False,
+            768,
         ],
         [
             "A man and a woman are sitting at a classroom desk. The man is the man with yellow hair in <img><|image_1|></img>. The woman is the woman on the left of <img><|image_2|></img>",
@@ -130,6 +136,7 @@ def get_example():
             True,
             False,
             False,
+            768,
         ],
         [
             "The flower <img><|image_1|><\/img> is placed in the vase which is in the middle of <img><|image_2|><\/img> on a wooden table of a living room",
@@ -145,6 +152,7 @@ def get_example():
             True,
             False,
             False,
+            768,
         ],
         [
             "<img><|image_1|><img>\n Remove the woman's earrings. Replace the mug with a clear glass filled with sparkling iced cola.",
@@ -160,6 +168,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "Detect the skeleton of human in this image: <img><|image_1|></img>.",
@@ -175,6 +184,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "Generate a new photo using the following picture and text as conditions: <img><|image_1|><img>\n A young boy is sitting on a sofa in the library, holding a book. His hair is neatly combed, and a faint smile plays on his lips, with a few freckles scattered across his cheeks. The library is quiet, with rows of shelves filled with books stretching out behind him.",
@@ -190,6 +200,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "Following the pose of this image <img><|image_1|><img>, generate a new photo: A young boy is sitting on a sofa in the library, holding a book. His hair is neatly combed, and a faint smile plays on his lips, with a few freckles scattered across his cheeks. The library is quiet, with rows of shelves filled with books stretching out behind him.",
@@ -205,6 +216,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "Following the depth mapping of this image <img><|image_1|><img>, generate a new photo: A young girl is sitting on a sofa in the library, holding a book. His hair is neatly combed, and a faint smile plays on his lips, with a few freckles scattered across his cheeks. The library is quiet, with rows of shelves filled with books stretching out behind him.",
@@ -220,6 +232,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "<img><|image_1|><\/img> What item can be used to see the current time? Please remove it.",
@@ -235,6 +248,7 @@ def get_example():
             True,
             False,
             True,
+            1024,
         ],
         [
             "According to the following examples, generate an output for the input.\nInput: <img><|image_1|></img>\nOutput: <img><|image_2|></img>\n\nInput: <img><|image_3|></img>\nOutput: ",
@@ -250,14 +264,15 @@ def get_example():
             True,
             False,
             False,
+            768,
         ],
     ]
     return case
 
 def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
-            use_input_image_size_as_output):    
+            use_input_image_size_as_output, max_input_image_size):    
     return generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
-            use_input_image_size_as_output)
+            use_input_image_size_as_output, max_input_image_size)
 
 description = """
 OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, and image-conditioned generation.
@@ -266,7 +281,8 @@ For example, use an image of a woman to generate a new image:
 prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
 
 Tips:
-- For out of memory or time cost, you can refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
+- For out of memory or time cost, you can set `offload_model=True` or refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
+- If inference time is too long when input multiple images, please try to reduce the `max_input_image_size`. More details please refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources).
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
 - Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
 - Low-quality: More detailed prompt will lead to better results. 
@@ -338,6 +354,10 @@ with gr.Blocks() as demo:
                 label="Seed", minimum=0, maximum=2147483647, value=42, step=1
             )
 
+            max_input_image_size = gr.Slider(
+                label="max_input_image_size", minimum=128, maximum=2048, value=1024, step=16
+            )
+
             separate_cfg_infer = gr.Checkbox(
                 label="separate_cfg_infer", info="Whether to use separate inference process for different guidance. This will reduce the memory cost.", value=True,
             )
@@ -373,6 +393,7 @@ with gr.Blocks() as demo:
             separate_cfg_infer,
             offload_model,
             use_input_image_size_as_output,
+            max_input_image_size,
         ],
         outputs=output_image,
     )
@@ -394,6 +415,7 @@ with gr.Blocks() as demo:
             separate_cfg_infer,
             offload_model,
             use_input_image_size_as_output,
+            max_input_image_size,
         ],
         outputs=output_image,
     )

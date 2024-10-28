@@ -111,7 +111,7 @@ images = pipe(
 )
 images[0].save("example_ti2i.png")  # save output PIL image
 ```
-- For thre required resources and the method to run OmniGen efficiently, please refer to [docs/inference.md#requiremented-resources](docs/inference.md#requiremented-resources).
+- If out of memory, you can set `offload_model=True`. If inference time is too long when input multiple images, you can reduce the `max_input_image_size`.  For thre required resources and the method to run OmniGen efficiently, please refer to [docs/inference.md#requiremented-resources](docs/inference.md#requiremented-resources).
 - For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
 - For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
 

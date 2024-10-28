@@ -116,7 +116,7 @@ To reduce memory consumption while maintaining inference speed, quantization is 
 
 We conducted experiments on the A800 and RTX 3090. The memory requirements and inference times are shown in the table below. You can choose the appropriate settings based on your available resources.
 
-**Overall, the text-to-image task requires minimal memory and time costs, comparable to other latest text-to-image models. However, when using input images, the computational cost increases. Memory usage can be reduced by extending the processing time.**
+**Overall, the text-to-image task requires minimal memory and time costs, comparable to other latest text-to-image models. However, when using input images, the computational cost increases. If out of memory, you can set `offload_model=True`. If inference time is too long, you can reduce the `max_input_image_size`**
 
 
 - Different image size. 
@@ -140,7 +140,8 @@ For RTX 3090 GPU(24G):
 | max_input_image_size=512,height=512,width=512 | 9G, 19s   | 9G, 36s  | 9G, 43s  |
 
 
-You can set smaller `max_input_image_size` to reduce memory usage, but note that the generation quality may be lower.
+We recommend reducing the size of input images to improve speed (i.e., reduce the `max_input_image_size`), especially when inputting multiple images, as multiple large images can significantly slow down the process.
+A very smaller `max_input_image_size` to significantly reduce memory usage and speed-up generation, but note that the generation quality may be lower.
 And please set the `height` and `width` the same as the size of input image for image editing task.
 
 
