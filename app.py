@@ -11,7 +11,8 @@ pipe = OmniGenPipeline.from_pretrained(
 )
 
 @spaces.GPU(duration=180)
-def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer):
+def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
+            use_input_image_size_as_output):
     input_images = [img1, img2, img3]
     # Delete None
     input_images = [img for img in input_images if img is not None]
@@ -24,12 +25,14 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_gu
         height=height,
         width=width,
         guidance_scale=guidance_scale,
-        img_guidance_scale=1.6,
+        img_guidance_scale=img_guidance_scale,
         num_inference_steps=inference_steps,
-        separate_cfg_infer=True, # set False can speed up the inference process
-        use_kv_cache=False,
+        separate_cfg_infer=separate_cfg_infer, 
+        use_kv_cache=True,
+        offload_kv_cache=True,
+        offload_model=offload_model,
+        use_input_image_size_as_output=use_input_image_size_as_output,
         seed=seed,
-        # separate_cfg_infer=separate_cfg_infer,
     )
     img = output[0]
     return img
@@ -238,8 +241,8 @@ def get_example():
             "./imgs/test_cases/icl1.jpg",
             "./imgs/test_cases/icl2.jpg",
             "./imgs/test_cases/icl3.jpg",
-            1024,
-            1024,
+            224,
+            224,
             2.5,
             1.6,
             50,
@@ -261,12 +264,36 @@ OmniGen is a unified image generation model that you can use to perform various 
 For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>` (for the first image, the placeholder is <img><|image_1|></img>. for the second image, the the placeholder is <img><|image_2|></img>).
 For example, use an image of a woman to generate a new image:
 prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
+
 Tips:
+- For out of memory or time cost, you can refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
+- Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
 - Low-quality: More detailed prompt will lead to better results. 
 - Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.
 - Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
-- For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`.
+- For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`. 
+- For image editing task and controlnet task, we recommend to set the height and width of output image as the same as input image. For example, if you want to edit a 512x512 image, you should set the height and width of output image as 512x512. You also can set the `use_input_image_size_as_output` to automatically set the height and width of output image as the same as input image.
+
+
+"""
+
+article = """
+---
+**Citation** 
+<br> 
+If you find this repository useful, please consider giving a star ⭐ and citation
+```
+@article{xiao2024omnigen,
+  title={Omnigen: Unified image generation},
+  author={Xiao, Shitao and Wang, Yueze and Zhou, Junjie and Yuan, Huaying and Xing, Xingrun and Yan, Ruiran and Wang, Shuting and Huang, Tiejun and Liu, Zheng},
+  journal={arXiv preprint arXiv:2409.11340},
+  year={2024}
+}
+```
+**Contact**
+<br>
+If you have any questions, please feel free to open an issue or directly reach us out via email.
 """
 
 
@@ -289,10 +316,10 @@ with gr.Blocks() as demo:
 
             # slider
             height_input = gr.Slider(
-                label="Height", minimum=256, maximum=2048, value=1024, step=16
+                label="Height", minimum=128, maximum=2048, value=1024, step=16
             )
             width_input = gr.Slider(
-                label="Width", minimum=256, maximum=2048, value=1024, step=16
+                label="Width", minimum=128, maximum=2048, value=1024, step=16
             )
 
             guidance_scale_input = gr.Slider(
@@ -370,6 +397,8 @@ with gr.Blocks() as demo:
         ],
         outputs=output_image,
     )
+
+    gr.Markdown(article)
 
 # launch
 demo.launch()

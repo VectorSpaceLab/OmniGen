@@ -97,6 +97,7 @@ python app.py
 
 
 ## Tips
+- For out of memory or time cost, you can refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
 - Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
 - Low-quality: More detailed prompt will lead to better results. 
@@ -104,41 +105,38 @@ python app.py
 - Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
 - For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`. 
 - For image editing task and controlnet task, we recommend to set the height and width of output image as the same
-as input image. For example, if you want to edit a 512x512 image, you should set the height and width of output image as 512x512. 
-- For out of memory or latency issue, you can refer to []() to select a appropriate setting.
+as input image. For example, if you want to edit a 512x512 image, you should set the height and width of output image as 512x512. You also can set the `use_input_image_size_as_output` to automatically set the height and width of output image as the same as input image.
+
 
 ## Requiremented Resources
 
 We are currently experimenting with some techniques to reduce memory usage and improve speed, including `use_kv_cache, offload_kv_cache, separate_cfg_infer, offload_model`, which you can enable in the pipeline. 
-For example: 
-```
-images = pipe(
-    prompt="A curly-haired man in a red shirt is drinking tea.", 
-    height=1024, 
-    width=1024, 
-    guidance_scale=2.5,
-    seed=0,
-    offload_model=True,
-)
-```
 The default setting is`use_kv_cache=True, offload_kv_cache=True, separate_cfg_infer=True, offload_model=False`. 
 
 
-We have shown results on various machines. You can choose the appropriate settings based on your hardware.
-
-
+We conducted experiments on the A800 and RTX 3090. The memory requirements and inference times are shown in the table below. You can choose the appropriate settings based on your available resources.
 
 
 - Different image size. 
 
 Different image size (`max_input_image_size` is the max size of input image, `height` and `width` are the size of output image) with the default inference settings (`use_kv_cache=True,offload_kv_cache=True,separate_cfg_infer=True`)
 
+For A800 GPU:  
 | Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
 |:-------------|:----------:|:-------------------:|:---------------------:|
 | max_input_image_size=1024,height=1024,width=1024 | 9G, 31s   | 12G, 1m6s  | 13G, 1m20s  |
 | max_input_image_size=512,height=1024,width=1024 | 9G, 31s   | 10G, 50s  | 10G, 54s |
 | max_input_image_size=768,height=768,width=768 | 9G, 16s  | 10G, 32s  | 10G, 37s  |
 | max_input_image_size=512,height=512,width=512 | 9G, 7s   | 9G, 14s  | 9G, 15s  |
+
+For RTX 3090 GPU:
+| Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
+|:-------------|:----------:|:-------------------:|:---------------------:|
+| max_input_image_size=1024,height=1024,width=1024 | 9G, 1m17s   | 12G, 2m46s  | 13G, 3m23s  |
+| max_input_image_size=512,height=1024,width=1024 | 9G, 1m18s   | 10G, 2m8s  | 10G, 2m18s |
+| max_input_image_size=768,height=768,width=768 | 9G, 41s  | 10G, 1m22s  | 10G, 1m38s  |
+| max_input_image_size=512,height=512,width=512 | 9G, 19s   | 9G, 36s  | 9G, 43s  |
+
 
 You can set smaller `max_input_image_size` to reduce memory usage, but note that the generation quality may be lower.
 And please set the `height` and `width` the same as the size of input image for image editing task.
@@ -148,6 +146,7 @@ And please set the `height` and `width` the same as the size of input image for 
 
 Default image size: height=1024, width=1024, max_input_image_size=1024
 
+For A800 GPU:  
 | Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
 |:-------------|:----------:|:-------------------:|:---------------------:|
 | use_kv_cache | 18G, 30s   | 36G, 1m  | 48G, 1m13s |
@@ -156,13 +155,13 @@ Default image size: height=1024, width=1024, max_input_image_size=1024
 | use_kv_cache,offload_kv_cache,offload_model | 4G, 55s   | 7G, 1m30s  | 11G, 1m48s  |
 | use_kv_cache,offload_kv_cache,separate_cfg_infer,offload_model | 3G, 1m23s   | 5G, 2m19s   | 6G, 2m30s |
 
-For a RTX 3090 GPU, the inference time is as follows:
+For RTX 3090 GPU:
 | Settings     |  Only Text | Text + Single Image |  Text + Two Images    |
 |:-------------|:----------:|:-------------------:|:---------------------:|
 | use_kv_cache | 18G, 1m14s   | OOM  | OOM  |
 | use_kv_cache,offload_kv_cache | 10G, 1m17s   | 14G, 3m11s | 17G, 4m3s  |
 | use_kv_cache,offload_kv_cache,separate_cfg_infer | 9G, 1m18s   | 12G, 2m46s  | 13G, 3m21s  |
 | use_kv_cache,offload_kv_cache,offload_model | 4G,3m1s    | 7G, 4m14s  | 11G, 5m4s  |
-| use_kv_cache,offload_kv_cache,separate_cfg_infer,offload_model | 3G, 4m56s   | 5G, 7m49s   | 6G,  |
+| use_kv_cache,offload_kv_cache,separate_cfg_infer,offload_model | 3G, 4m56s   | 5G, 7m49s   | 6G, 8m6s |
 
 Overall, the text-to-image task only requires minimal memory and time cost, but when input images are used, the computational cost increases. You can reduce memory usage by extending the processing time.

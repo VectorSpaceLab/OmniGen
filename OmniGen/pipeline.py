@@ -144,7 +144,7 @@ class OmniGenPipeline:
         use_img_guidance: bool = True,
         img_guidance_scale: float = 1.6,
         max_input_image_size: int = 1024,
-        separate_cfg_infer: bool = False,
+        separate_cfg_infer: bool = True,
         offload_model: bool = False,
         use_kv_cache: bool = True,
         offload_kv_cache: bool = True,

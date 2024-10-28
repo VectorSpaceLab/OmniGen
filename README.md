@@ -42,6 +42,7 @@ If you have any questions, ideas or interesting tasks you want OmniGen to accomp
 
 
 ## 2. News
+- 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
 - 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
 
@@ -103,16 +104,15 @@ images = pipe(
     input_images=["./imgs/test_cases/two_man.jpg"],
     height=1024, 
     width=1024,
-    separate_cfg_infer=False,  # if OOM, you can set separate_cfg_infer=True 
-    guidance_scale=3, 
-    img_guidance_scale=1.6
+    guidance_scale=2.5, 
+    img_guidance_scale=1.6,
+    seed=0
 )
 images[0].save("example_ti2i.png")  # save output PIL image
 ```
-For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
-For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
-
-Currently, the generation speed of OmniGen is not very fast. In our experiments (using one A800 GPU), the text-to-image task (1024x1024) takes approximately 30 seconds, and the text-and-image mixed instruction takes about 90 seconds (the speed can be improved by reducing the size of the input images). In fact, OmniGen has 3.8 billion parameters, leaving significant room for speed optimization. We will try to improve the model's efficiency, and welcome the contributions from the community.
+- For thre required resources and the method to run OmniGen efficiently, please refer to [docs/inference.md#requiremented-resources](docs/inference.md#requiremented-resources).
+- For more examples for image generation, you can refer to [inference.ipynb](inference.ipynb) and [inference_demo.ipynb](inference_demo.ipynb)
+- For more details about the argument in inference, please refer to [docs/inference.md](docs/inference.md). 
 
 
 ### Using Diffusers
