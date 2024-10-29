@@ -76,7 +76,6 @@ def main(args):
     model = model.to(device)
 
     if args.vae_path is None:
-        print(args.model_name_or_path)
         vae_path = os.path.join(args.model_name_or_path, "vae")
         if os.path.exists(vae_path):
             vae = AutoencoderKL.from_pretrained(vae_path).to(device)
@@ -112,8 +111,6 @@ def main(args):
         model = get_peft_model(model, transformer_lora_config)
         model.to(weight_dtype)
         transformer_lora_parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
-        for n,p in model.named_parameters():
-            print(n, p.requires_grad)
         opt = torch.optim.AdamW(transformer_lora_parameters, lr=args.lr, weight_decay=args.adam_weight_decay)
     else:
         opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.adam_weight_decay)
