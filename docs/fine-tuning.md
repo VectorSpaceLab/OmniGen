@@ -44,8 +44,8 @@ accelerate launch \
     --keep_raw_resolution \
     --max_image_size 1024 \
     --gradient_accumulation_steps 1 \
-    --ckpt_every 100 \
-    --epochs 100 \
+    --ckpt_every 50 \
+    --epochs 200 \
     --log_every 1 \
     --results_dir ./results/toy_finetune
 ```
@@ -110,7 +110,7 @@ accelerate launch \
     --keep_raw_resolution \
     --max_image_size 1024 \
     --gradient_accumulation_steps 1 \
-    --ckpt_every 100 \
+    --ckpt_every 50 \
     --epochs 100 \
     --log_every 1 \
     --results_dir ./results/toy_finetune_lora
@@ -149,7 +149,7 @@ accelerate launch \
     --keep_raw_resolution \
     --max_image_size 1024 \
     --gradient_accumulation_steps 1 \
-    --ckpt_every 100 \
+    --ckpt_every 50 \
     --epochs 200 \
     --log_every 1 \
     --results_dir ./results/toy_finetune_lora
