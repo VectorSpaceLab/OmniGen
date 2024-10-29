@@ -2,7 +2,7 @@
 
 
 <p align="center">
-    <a href="">
+    <a href="https://vectorspacelab.github.io/OmniGen/">
         <img alt="Build" src="https://img.shields.io/badge/Project%20Page-OmniGen-yellow">
     </a>
     <a href="https://arxiv.org/abs/2409.11340">
