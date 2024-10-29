@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="OmniGen: Unified Image Generation">
+    <meta name="keywords" content="image generation, AI, machine learning">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OmniGen: Unified Image Generation</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="./static/css/index.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/954/954591.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script defer src="https://cdnjs.com/ajax/libs/font-awesome/5.15.1/js/all.min.js"></script>
+    <script type="module" src="https://gradio.s3-us-west-2.amazonaws.com/4.16.0/gradio.js"></script>
+</head>
+
+<style>
+    .expandable-card .card-text-container {
+        max-height: 200px;
+        overflow-y: hidden;
+        position: relative;
+    }
+
+    .expandable-card.expanded .card-text-container {
+        max-height: none;
+    }
+
+    .expand-btn {
+        position: relative;
+        display: none;
+        background-color: rgba(255, 255, 255, 0.8);
+        color: #510c75;
+        border-color: transparent;
+    }
+
+    .expand-btn:hover {
+        background-color: rgba(200, 200, 200, 0.8);
+        text-decoration: none;
+        border-color: transparent;
+        color: #510c75;
+    }
+
+    .expand-btn:focus {
+        outline: none;
+        text-decoration: none;
+    }
+
+    .expandable-card:not(.expanded) .card-text-container:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 90px;
+        background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 1));
+    }
+
+    .expandable-card:not(.expanded) .expand-btn {
+        margin-top: -40px;
+    }
+
+    .card-body {
+        padding-bottom: 5px;
+    }
+
+    .vertical-flex-layout {
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .figure-img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .adjustable-font-size {
+        font-size: calc(0.5rem + 2vw);
+    }
+
+    .chat-history {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 5px;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+
+    #gradio pre {
+        background-color: transparent;
+    }
+</style>
+
+<body>
+    <section class="hero">
+        <div class="hero-body">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered">
+                    <div class="column has-text-centered">
+                        <h1 class="title is-1 publication-title">OmniGen: Unified Image Generation</h1>
+                        <h3 class="title is-3 publication-title">Shitao Xiao<sup>*</sup>, Yueze Wang<sup>*</sup>, Junjie
+                            Zhou<sup>*</sup>, Huaying Yuan<sup>*</sup>,
+                            Xingrun Xing, Ruiran Yan, Shuting Wang, Tiejun Huang, Zheng Liu<sup>+</sup></h3>
+                        <!-- <h5 class="subtitle is-5 publication-awards">arXiv:2409.11340v1 [cs.CV] 17 Sep 2024</h5> -->
+                        <div class="is-size-5 publication-authors">
+                            <span class="author-block">
+                                <a href="https://www.baai.ac.cn" style="color:#f68946;font-weight:normal;">Beijing
+                                    Academy
+                                    of Artificial Intelligence</a>
+                            </span>
+                        </div>
+                        <div class="is-size-6 publication-authors">
+                            <span class="author-block"><sup>*</sup>Equal Contribution <sup>+</sup>Corresponding
+                                authors</span>
+                        </div>
+                        <div class="column has-text-centered">
+                            <div class="publication-links">
+                                <span class="link-block">
+                                    <a href="https://arxiv.org/pdf/2409.11340v1" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="ai ai-arxiv"></i>
+                                        </span>
+                                        <span>arXiv</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="https://github.com/VectorSpaceLab/OmniGen" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fab fa-github"></i>
+                                        </span>
+                                        <span>Code</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="https://huggingface.co/spaces/Shitao/OmniGen" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fab fa-github"></i>
+                                        </span>
+                                        <span>HF Demo</span>
+                                    </a>
+                                </span>
+                                <span class="link-block">
+                                    <a href="https://huggingface.co/Shitao/OmniGen-v1" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fab fa-github"></i>
+                                        </span>
+                                        <span>Model Weight</span>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="hero teaser">
+        <div class="container is-max-desktop">
+            <div class="hero-body">
+                <h4 class="subtitle has-text-centered">
+                    🔥 OmniGen is the first diffusion model for unified image generation. It unifies various tasks into a
+                    single framework and simplifies the architecture.
+                </h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- <section class="section" style="background-color:#efeff081">
+        <div class="container is-max-desktop" id="gradio">
+            <gradio-app src="https://vectorspacelab.github.io/OmniGen"></gradio-app>
+        </div>
+    </section> -->
+
+    <section class="section" style="background-color:#efeff081">
+        <div class="container is-max-desktop">
+            <!-- Abstract. -->
+            <div class="columns is-centered has-text-centered">
+                <div class="column is-six-fifths">
+                    <h2 class="title is-3">Abstract</h2>
+                    <div class="content has-text-justified">
+                        <p>
+                            The emergence of Large Language Models (LLMs) has unified language generation tasks and
+                            revolutionized human-machine interaction. However, in the realm of image generation, a
+                            unified model capable of handling various tasks within a single framework remains largely
+                            unexplored. In this work, we introduce OmniGen, a new diffusion model for unified image
+                            generation. Unlike popular diffusion models (e.g., Stable Diffusion), OmniGen no longer
+                            requires additional modules such as ControlNet or IP-Adapter to process diverse control
+                            conditions.
+
+                            OmniGen is characterized by the following features:
+
+                            <li><b>Unification</b>. OmniGen not only demonstrates text-to-image generation capabilities
+                                but also inherently supports various downstream tasks, such as image editing,
+                                subject-driven generation, and visual-conditional generation. Additionally, OmniGen can
+                                handle classic computer vision tasks by transforming them into image generation tasks,
+                                such as edge detection and human pose recognition.</li>
+                            <li><b>Simplicity</b>. The architecture of OmniGen is highly simplified, eliminating the
+                                need for additional text encoders. Moreover, it is more user-friendly compared to
+                                existing diffusion models, enabling complex tasks to be accomplished through
+                                instructions without the need and cost for extra preprocessing steps (e.g., human pose
+                                estimation), thereby significantly simplifying the workflow of image generation.</li>
+                            <li><b>Knowledge Transfer</b>. Benefit from learning in a unified format, OmniGen
+                                effectively transfers knowledge across different tasks, manages unseen tasks and
+                                domains, and exhibits novel capabilities.</li>
+
+                            We also explore the model’s
+                            reasoning capabilities and potential applications of chain-of-thought mechanism. This work
+                            represents the first attempt at a general-purpose image generation model, and there remain
+                            several unresolved issues. We will open-source the related resources at
+                            https://github.com/VectorSpaceLab/OmniGen to foster advancements in this field.
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <centering>
+            <div style="text-align: center;">
+                <video width="45%" height="25%" controls>
+                    <source src="img/OmniGen-demo-video.mov" type="video/mp4">
+                </video>
+            </div>
+        </centering>
+
+
+
+    </section>
+
+
+
+    <section class="section">
+
+        <div class="columns is-centered has-text-centered">
+            <div class="column is-six-fifths">
+                <h2 class="title is-3"> What can OmniGen do?</h2>
+            </div>
+        </div>
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Flexible and Controllable Generation </h3>
+                        <p> Based on OmniGen's general capabilities, more flexible image generation can be implemented.
+                            The following showcases a simple pipeline: generating images from text, editing parts of the generated images,
+                            generating redraws based on the human poses in the generated images,
+                            and extracting desired objects from another image to integrate into the new image.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/demo_cases.png" vspace="30">
+            </div>
+        </centering>
+
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Referring Expression Generation </h3>
+                        <p> You can input multiple images and use simple, general language to refer to the objects within those images.
+                            OmniGen can automatically recognize the necessary objects in each image and generate new images based on them.
+                            No additional operations, such as image cropping or face detection, are required.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/referring.png" vspace="30">
+            </div>
+        </centering>
+
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Common Image generation tasks </h3>
+                        <p> OmniGen can process various image generation tasks, inlcuding image editing, image-conditional gengeration (controlnet), etc.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/common_tasks.png" vspace="30">
+            </div>
+        </centering>
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Classical Vision tasks </h3>
+                        <p> OmniGen also is able to process some classical computer vision tasks, e.g., low-level tasks: deblur, derain, inpainting; high level tasks: human pose estimation, depth estimation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/cv.png" vspace="30">
+            </div>
+        </centering>
+
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Furthe Analysis </h3>
+                        <p> OmniGen has potential inference capabilities and a certain degree of in-context learning (ICL) ability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/reason_icl.png" vspace="30">
+            </div>
+        </centering>
+
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <h3 class="title is-4"> Step by step </h3>
+                        <p> The Chain-of-Thought (CoT) method can significantly boost the performance of LLMs by decomposing the
+                            task into multiple steps and sequentially solving each step to obtain an accurate final answer.
+                            We consider whether a similar alternative can be applied to image generation.
+                            Inspired by the basic way of human drawing, we hope to mimic the step-by-step drawing process,
+                            iteratively refining theimage from a blank canvas. We fine-tune the OmniGen to process this task.
+                            Based on the findings of previous work on LLMs, which indicate that process supervision significantly
+                            outperforms outcome supervision, we posit that supervising the drawing process of images is a
+                            promising direction that may assist the model in handling more complex and diverse scenes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/step.png" vspace="30">
+            </div>
+        </centering>
+
+
+    </section>
+
+
+    <section class="section">
+        <!-- Results. -->
+
+        <div class="columns is-centered has-text-centered">
+            <div class="column is-six-fifths">
+                <h2 class="title is-3">Architecture</h2>
+            </div>
+        </div>
+        <!-- </div> -->
+        <!--/ Results. -->
+
+        <div class="container is-max-desktop">
+
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <p>
+                            Current diffusion models are typically limited to common text-to-image tasks and can not
+                            perform a broader range of downstream image-generation tasks. To achieve real-world applications,
+                            users often need to design and integrate additional network structures to extend the capabilities of
+                            diffusion models, making the models highly cumbersome. Even worse, these additional parameter
+                            networks are usually task-specific and can not be reused for other tasks, unless more networks
+                            are designed and trained for different functions. To circumvent these issues, the design principles
+                            of OmniGen are as follows: 1). Universality: accepting any form of image and text inputs for
+                            various tasks; 2). Conciseness, avoiding overly complex structural designs and numerous additional
+                            components.
+                        </ul>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/framework.png" vspace="30">
+            </div>
+        </centering>
+
+
+
+
+
+    <section class="section">
+
+        <div class="columns is-centered has-text-centered">
+            <div class="column is-six-fifths">
+                <h2 class="title is-3"> Dataset</h2>
+            </div>
+        </div>
+
+        <div class="container is-max-desktop">
+            <div class="columns is-centered">
+                <div class="column is-full-width">
+                    <div class="content has-text-justified">
+                        <p> To achieve robust multi-task processing capabilities, it is essential to train models on large-scale and
+                            diverse datasets. However, in the field of image generation, a readily available large-scale and diverse
+                            dataset has yet to emerge. In this work, we have constructed a large-scale unified image generation
+                            dataset for the first time, which we refer to as the X2I dataset, meaning "anything to image". We
+                            have converted these data into a unified format, and following figure presents some examples from the X2I
+                            dataset. The entire dataset comprises approximately 0.1 billion images. We will provide a detailed
+                            description of the composition of this dataset in the following sections.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <centering>
+            <div style="text-align: center;">
+                <img id="teaser" width="43%" src="img/X2I.png" vspace="30">
+            </div>
+        </centering>
+
+    </section>
+
+
+
+
+
+    <section class="section" id="BibTeX">
+        <div class="container is-max-desktop content">
+            <h2 class="title">BibTeX</h2>
+            <pre><code> 
+@misc{omnigen2024, 
+    author={Shitao Xiao, Yueze Wang, Junjie Zhou, Huaying Yuan, Xingrun Xing, Ruiran Yan, Shuting Wang, Tiejun Huang, Zheng Liu},
+    title={OmniGen: Unified Image Generation}, 
+    publisher={arXiv:2409.11340v1}, 
+    year={2024}, 
+} 
+            </code></pre>
+        </div>
+    </section>
+</body>
+
+</html>
