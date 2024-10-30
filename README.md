@@ -31,6 +31,7 @@
 
 
 ## 1. News
+
 - 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
 - 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
@@ -84,9 +85,9 @@ Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  # Your local model path is also acceptable, where all files should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
 
-# Text to Image
+## Text to Image
 images = pipe(
     prompt="A curly-haired man in a red shirt is drinking tea.", 
     height=1024, 
@@ -96,7 +97,7 @@ images = pipe(
 )
 images[0].save("example_t2i.png")  # save output PIL Image
 
-# Multi-modal to Image
+## Multi-modal to Image
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
 # You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
 images = pipe(
@@ -116,6 +117,7 @@ images[0].save("example_ti2i.png")  # save output PIL image
 
 
 ### Using Diffusers
+
 Coming soon.
 
 
@@ -128,7 +130,6 @@ For the local gradio demo, you need to install `pip install gradio spaces` , and
 pip install gradio spaces
 python app.py
 ```
-
 
 
 ## 6. Finetune
