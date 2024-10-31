@@ -85,7 +85,9 @@ Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  # Your local model path is also acceptable, where all files should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  
+# Note: Your local model path is also acceptable, such as 'pipe = OmniGenPipeline.from_pretrained(your_local_model_path)', where all files in your_local_model_path should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
+# Note: If the original link https://huggingface.co/Shitao/OmniGen-v1/tree/main is unstable when downloading, it is recommended to use this mirror link https://hf-mirror.com/Shitao/OmniGen-v1/tree/main or other ways in https://hf-mirror.com/  
 
 ## Text to Image
 images = pipe(
