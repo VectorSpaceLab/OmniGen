@@ -14,7 +14,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'torch==2.3.1',
+        'torch<2.5',
         'transformers==4.45.2',
         'datasets',
         'accelerate==0.26.1',
