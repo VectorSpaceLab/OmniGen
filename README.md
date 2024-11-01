@@ -31,6 +31,7 @@
 
 
 ## 1. News
+
 - 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
 - 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
@@ -48,14 +49,13 @@ If you have any questions, ideas or interesting tasks you want OmniGen to accomp
 
 
 
-
 ## 3. Methodology
 
 You can see details in our [paper](https://arxiv.org/abs/2409.11340). 
 
 
-## 4. What Can OmniGen do?
 
+## 4. What Can OmniGen do?
 
 OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, image editing, and image-conditioned generation. **OmniGen don't need additional plugins or operations, it can automatically identify the features (e.g., required object, human pose, depth mapping) in input images according the text prompt.**
 We showcase some examples in [inference.ipynb](inference.ipynb). And in [inference_demo.ipynb](inference_demo.ipynb), we show an interesting pipeline to generate and modify a image.
@@ -85,9 +85,11 @@ Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
 
-pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")
+pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  
+# Note: Your local model path is also acceptable, such as 'pipe = OmniGenPipeline.from_pretrained(your_local_model_path)', where all files in your_local_model_path should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
+# Note: If the original link https://huggingface.co/Shitao/OmniGen-v1/tree/main is unstable when downloading, it is recommended to use this mirror link https://hf-mirror.com/Shitao/OmniGen-v1/tree/main or other ways in https://hf-mirror.com/  
 
-# Text to Image
+## Text to Image
 images = pipe(
     prompt="A curly-haired man in a red shirt is drinking tea.", 
     height=1024, 
@@ -97,7 +99,7 @@ images = pipe(
 )
 images[0].save("example_t2i.png")  # save output PIL Image
 
-# Multi-modal to Image
+## Multi-modal to Image
 # In prompt, we use the placeholder to represent the image. The image placeholder should be in the format of <img><|image_*|></img>
 # You can add multiple images in the input_images. Please ensure that each image has its placeholder. For example, for the list input_images [img1_path, img2_path], the prompt needs to have two placeholders: <img><|image_1|></img>, <img><|image_2|></img>.
 images = pipe(
@@ -117,6 +119,7 @@ images[0].save("example_ti2i.png")  # save output PIL image
 
 
 ### Using Diffusers
+
 Coming soon.
 
 
@@ -129,7 +132,6 @@ For the local gradio demo, you need to install `pip install gradio spaces` , and
 pip install gradio spaces
 python app.py
 ```
-
 
 
 ## 6. Finetune

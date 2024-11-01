@@ -270,7 +270,7 @@ def main(args):
                         if ema_state_dict is not None:
                             checkpoint_path = f"{checkpoint_dir}/{int(train_steps/args.gradient_accumulation_steps):07d}_ema"
                             os.makedirs(checkpoint_path, exist_ok=True)
-                            torch.save(state_dict, os.path.join(checkpoint_path, "model.pt"))
+                            torch.save(ema_state_dict, os.path.join(checkpoint_path, "model.pt"))
                             processor.text_tokenizer.save_pretrained(checkpoint_path)
                             model.llm.config.save_pretrained(checkpoint_path)
                     logger.info(f"Saved checkpoint to {checkpoint_path}")

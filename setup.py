@@ -21,6 +21,7 @@ setup(
         'diffusers==0.30.3',
         "timm",
         "peft==0.9.0",
-        "safetensors"
+        "safetensors",
+        "setuptools"
     ],
 )
