@@ -62,7 +62,7 @@ We showcase some examples in [inference.ipynb](inference.ipynb). And in [inferen
 
 Here is the illustrations of OmniGen's capabilities: 
 - You can control the image generation flexibly via OmniGen
-![demo](./imgs/demo_cases.png)
+![demo](./imgs/demo_cases2.png)
 - Referring Expression Generation: You can input multiple images and use simple, general language to refer to the objects within those images. OmniGen can automatically recognize the necessary objects in each image and generate new images based on them. No additional operations, such as image cropping or face detection, are required.
 ![demo](./imgs/referring2.png)
 
