@@ -20,7 +20,7 @@ setup(
         'accelerate==0.26.1',
         'diffusers==0.30.3',
         "timm",
-        "peft==0.9.0",
+        "peft==0.13.2",
         "safetensors",
         "setuptools"
     ],
