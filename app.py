@@ -281,11 +281,11 @@ For example, use an image of a woman to generate a new image:
 prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
 
 Tips:
-- For out of memory or time cost, you can set `offload_model=True` or refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
-- If inference time is too long when input multiple images, please try to reduce the `max_input_image_size`. More details please refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources).
+- For out-of-memory or time cost, you can set `offload_model=True` or refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
+- If inference time is too long when inputting multiple images, please try to reduce the `max_input_image_size`. For more details please refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources).
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
 - Not match the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
-- Low-quality: More detailed prompt will lead to better results. 
+- Low-quality: More detailed prompts will lead to better results. 
 - Animate Style: If the genereate images is in animate style, you can try to add `photo` to the prompt`.
 - Edit generated image. If you generate a image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
 - For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`. 
@@ -362,10 +362,10 @@ with gr.Blocks() as demo:
                 label="separate_cfg_infer", info="Whether to use separate inference process for different guidance. This will reduce the memory cost.", value=True,
             )
             offload_model = gr.Checkbox(
-                label="offload_model", info="Offload model to CPU, which will significantly reduce the memory cost but slow down the generation speed. You can cancle separate_cfg_infer and set offload_model=True. If both separate_cfg_infer and offload_model be True, further reduce the memory, but slowest generation", value=False,
+                label="offload_model", info="Offload model to CPU, which will significantly reduce the memory cost but slow down the generation speed. You can cancel separate_cfg_infer and set offload_model=True. If both separate_cfg_infer and offload_model are True, further reduce the memory, but slowest generation", value=False,
             )
             use_input_image_size_as_output = gr.Checkbox(
-                label="use_input_image_size_as_output", info="Automatically adjust the output image size to be same as input image size. For editing and controlnet task, it can make sure the output image has the same size with input image leading to better performance", value=False,
+                label="use_input_image_size_as_output", info="Automatically adjust the output image size to be same as input image size. For editing and controlnet task, it can make sure the output image has the same size as input image leading to better performance", value=False,
             )
 
             # generate
