@@ -159,7 +159,12 @@ accelerate launch --num_processes=1 train.py \
 
 Please refer to [docs/fine-tuning.md](docs/fine-tuning.md) for more details (e.g. full finetune).
 
+### Contributors:
+Thank all our contributors for their efforts and warmly welcome new members to join in!
 
+<a href="https://github.com/VectorSpaceLab/OmniGen/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=VectorSpaceLab/OmniGen" />
+</a>
 
 ## License
 This repo is licensed under the [MIT License](LICENSE). 
