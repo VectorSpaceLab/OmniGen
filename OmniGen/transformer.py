@@ -121,7 +121,7 @@ class Phi3Transformer(Phi3Model):
             attention_mask = (1 - attention_mask) * min_dtype
             attention_mask = attention_mask.unsqueeze(1).to(inputs_embeds.dtype)
         else:
-            raise 
+            raise Exception("attention_mask parameter was unavailable or invalid")
             # causal_mask = self._update_causal_mask(
             #     attention_mask, inputs_embeds, cache_position, past_key_values, output_attentions
             # )
