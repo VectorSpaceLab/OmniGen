@@ -13,6 +13,9 @@
     </a>
     <a href="https://huggingface.co/Shitao/OmniGen-v1">
         <img alt="Build" src="https://img.shields.io/badge/HF%20Model-🤗-yellow">
+    </a>    
+    <a href="https://replicate.com/chenxwh/omnigen">
+        <img alt="Build" src="https://replicate.com/chenxwh/omnigen/badge">
     </a>
 </p>
 
@@ -31,7 +34,7 @@
 
 
 ## 1. News
-
+- 2024-11-03: Added Replicate Demo and API: [![Replicate](https://replicate.com/chenxwh/omnigen/badge)](https://replicate.com/chenxwh/omnigen)
 - 2024-10-28: We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22: :fire: We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
 - 2024-10-22: :fire: We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
