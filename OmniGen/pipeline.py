@@ -42,7 +42,6 @@ EXAMPLE_DOC_STRING = """
 """
 
 
-90
 class OmniGenPipeline:
     def __init__(
         self,
