@@ -14,13 +14,14 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'torch==2.3.1',
-        'transformers==4.45.2',
+        'torch<2.5',
+        'transformers>=4.45.2',
         'datasets',
-        'accelerate==0.26.1',
-        'diffusers==0.30.3',
+        'accelerate>=0.26.1',
+        'diffusers>=0.30.3',
         "timm",
-        "peft==0.9.0",
-        "safetensors"
+        "peft>=0.9.0",
+        "safetensors",
+        "setuptools"
     ],
 )

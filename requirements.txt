@@ -5,7 +5,6 @@ accelerate==0.26.1
 jupyter==1.0.0
 numpy==1.26.3
 pillow==10.2.0
-torch==2.3.1
-peft==0.9.0
+peft==0.13.2
 diffusers==0.30.3
 timm==0.9.16
