@@ -14,7 +14,7 @@ pipe = OmniGenPipeline.from_pretrained(
 
 @spaces.GPU(duration=180)
 def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
-            use_input_image_size_as_output, max_input_image_size, randomize_seed):
+            use_input_image_size_as_output, max_input_image_size, randomize_seed, save_images):
     input_images = [img1, img2, img3]
     # Delete None
     input_images = [img for img in input_images if img is not None]
@@ -42,16 +42,16 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_gu
     )
     img = output[0]
     
-    #### Save All Generated Images
-    from datetime import datetime
-    # Create outputs directory if it doesn't exist
-    os.makedirs('outputs', exist_ok=True)
-    # Generate unique filename with timestamp
-    timestamp = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
-    output_path = os.path.join('outputs', f'{timestamp}.png')
-    # Save the image
-    img.save(output_path)
-    ####
+    if save_images:
+        # Save All Generated Images
+        from datetime import datetime
+        # Create outputs directory if it doesn't exist
+        os.makedirs('outputs', exist_ok=True)
+        # Generate unique filename with timestamp
+        timestamp = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+        output_path = os.path.join('outputs', f'{timestamp}.png')
+        # Save the image
+        img.save(output_path)
     
     return img
 
@@ -256,7 +256,7 @@ def get_example():
     ]
     return case
 
-def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, seed, max_input_image_size, randomize_seed, use_input_image_size_as_output):    
+def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, seed, max_input_image_size, randomize_seed, use_input_image_size_as_output, save_images):    
     # 在函数内部设置默认值
     inference_steps = 50
     separate_cfg_infer = True
@@ -265,7 +265,7 @@ def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_
     return generate_image(
         text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, 
         inference_steps, seed, separate_cfg_infer, offload_model,
-        use_input_image_size_as_output, max_input_image_size, randomize_seed
+        use_input_image_size_as_output, max_input_image_size, randomize_seed, save_images
     )
 
 description = """
@@ -369,8 +369,10 @@ with gr.Blocks() as demo:
             
 
         with gr.Column():
-            # output image
-            output_image = gr.Image(label="Output Image")
+            with gr.Column():
+                # output image
+                output_image = gr.Image(label="Output Image")
+                save_images = gr.Checkbox(label="Save generated images", value=False)
 
     # click
     generate_button.click(
@@ -391,6 +393,7 @@ with gr.Blocks() as demo:
             use_input_image_size_as_output,
             max_input_image_size,
             randomize_seed,
+            save_images,
         ],
         outputs=output_image,
     )
