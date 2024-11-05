@@ -136,6 +136,16 @@ pip install gradio spaces
 python app.py
 ```
 
+#### Use Google Colab
+To use with Google Colab, please use the following command:
+
+```
+!git clone https://github.com/staoxiao/OmniGen.git
+%cd OmniGen
+!pip install -e .
+!pip install gradio spaces
+!python app.py --share
+```
 
 ## 6. Finetune
 We provide a training script `train.py` to fine-tune OmniGen. 
