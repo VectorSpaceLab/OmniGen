@@ -14,7 +14,7 @@ pipe = OmniGenPipeline.from_pretrained(
 
 @spaces.GPU(duration=180)
 def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
-            use_input_image_size_as_output, max_input_image_size, randomize_seed):
+            use_input_image_size_as_output, max_input_image_size, randomize_seed, save_images):
     input_images = [img1, img2, img3]
     # Delete None
     input_images = [img for img in input_images if img is not None]
@@ -41,9 +41,19 @@ def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_gu
         max_input_image_size=max_input_image_size,
     )
     img = output[0]
+    
+    if save_images:
+        # Save All Generated Images
+        from datetime import datetime
+        # Create outputs directory if it doesn't exist
+        os.makedirs('outputs', exist_ok=True)
+        # Generate unique filename with timestamp
+        timestamp = datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
+        output_path = os.path.join('outputs', f'{timestamp}.png')
+        # Save the image
+        img.save(output_path)
+    
     return img
-
-
 
 def get_example():
     case = [
@@ -246,7 +256,7 @@ def get_example():
     ]
     return case
 
-def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, seed, max_input_image_size, randomize_seed, use_input_image_size_as_output):    
+def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, seed, max_input_image_size, randomize_seed, use_input_image_size_as_output, save_images):    
     # 在函数内部设置默认值
     inference_steps = 50
     separate_cfg_infer = True
@@ -255,24 +265,28 @@ def run_for_examples(text, img1, img2, img3, height, width, guidance_scale, img_
     return generate_image(
         text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, 
         inference_steps, seed, separate_cfg_infer, offload_model,
-        use_input_image_size_as_output, max_input_image_size, randomize_seed
+        use_input_image_size_as_output, max_input_image_size, randomize_seed, save_images
     )
 
 description = """
-OmniGen is a unified image generation model that you can use to perform various tasks, including but not limited to text-to-image generation, subject-driven generation, Identity-Preserving Generation, and image-conditioned generation.
-For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>` (for the first image, the placeholder is <img><|image_1|></img>. for the second image, the the placeholder is <img><|image_2|></img>).
+OmniGen is a unified image generation model that you can use to perform various tasks, including, but not limited to, text-to-image generation, subject-driven generation, Identity-Preserving Generation, and image-conditioned generation.
+For multi-modal to image generation, you should pass a string as `prompt`, and a list of image paths as `input_images`. The placeholder in the prompt should be in the format of `<img><|image_*|></img>` (for the first image, the placeholder is <img><|image_1|></img>. for the second image, the placeholder is <img><|image_2|></img>).
 For example, use an image of a woman to generate a new image:
-prompt = "A woman holds a bouquet of flowers and faces the camera. Thw woman is \<img\>\<|image_1|\>\</img\>."
+prompt = "A woman holds a bouquet of flowers and faces the camera. The woman is \<img\>\<|image_1|\>\</img\>."
+
 Tips:
 - For image editing task and controlnet task, we recommend setting the height and width of output image as the same as input image. For example, if you want to edit a 512x512 image, you should set the height and width of output image as 512x512. You also can set the `use_input_image_size_as_output` to automatically set the height and width of output image as the same as input image.
 - For out-of-memory or time cost, you can set `offload_model=True` or refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources) to select a appropriate setting.
 - If inference time is too long when inputting multiple images, please try to reduce the `max_input_image_size`. For more details please refer to [./docs/inference.md#requiremented-resources](https://github.com/VectorSpaceLab/OmniGen/blob/main/docs/inference.md#requiremented-resources).
 - Oversaturated: If the image appears oversaturated, please reduce the `guidance_scale`.
-- Low-quality: More detailed prompts will lead to better results. 
-- Animate Style: If the generated images are in animate style, you can try to add `photo` to the prompt`.
-- Edit generated image. If you generate an image by omnigen and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate image, and should use seed=1 to edit this image.
-- For image editing tasks, we recommend placing the image before the editing instruction. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`. 
-**HF Spaces often encounter errors due to quota limitations, so recommend to run it locally.**
+- Not matching the prompt: If the image does not match the prompt, please try to increase the `guidance_scale`.
+- Low-quality: A more detailed prompt will lead to better results. 
+- Animated Style: If you want the generated image to appear less animated, and more realistic, you can try adding `photo` to the prompt.
+- Editing generated images: If you generate an image with OmniGen, and then want to edit it, you cannot use the same seed to edit this image. For example, use seed=0 to generate the image, and then use seed=1 to edit this image.
+- Image editing: In your prompt, we recommend placing the image before the editing instructions. For example, use `<img><|image_1|></img> remove suit`, rather than `remove suit <img><|image_1|></img>`.
+
+HF Spaces often encounter errors due to quota limitations, so recommend to run it locally.
+
 """
 
 article = """
@@ -355,8 +369,10 @@ with gr.Blocks() as demo:
             
 
         with gr.Column():
-            # output image
-            output_image = gr.Image(label="Output Image")
+            with gr.Column():
+                # output image
+                output_image = gr.Image(label="Output Image")
+                save_images = gr.Checkbox(label="Save generated images", value=False)
 
     # click
     generate_button.click(
@@ -377,6 +393,7 @@ with gr.Blocks() as demo:
             use_input_image_size_as_output,
             max_input_image_size,
             randomize_seed,
+            save_images,
         ],
         outputs=output_image,
     )
