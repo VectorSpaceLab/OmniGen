@@ -42,27 +42,27 @@ EXAMPLE_DOC_STRING = """
 """
 
 
-90
 class OmniGenPipeline:
     def __init__(
         self,
         vae: AutoencoderKL,
         model: OmniGen,
         processor: OmniGenProcessor,
+        device: Union[str, torch.device] = None,
     ):
         self.vae = vae
         self.model = model
         self.processor = processor
+        self.device = device
 
-        if torch.cuda.is_available():
-            self.device = torch.device("cuda")
-        elif torch.backends.mps.is_available():
-            self.device = torch.device("mps")
-        elif is_torch_npu_available():
-            self.device = torch.device("npu")
-        else:
-            logger.info("Don't detect any available devices, using CPU instead")
-            self.device = torch.device("cpu")
+        if device is None:
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+            elif torch.backends.mps.is_available():
+                self.device = torch.device("mps")
+            else:
+                logger.info("Don't detect any available GPUs, using CPU instead, this may take long time to generate image!!!")
+                self.device = torch.device("cpu")
 
         self.model.to(torch.bfloat16)
         self.model.eval()
@@ -152,7 +152,6 @@ class OmniGenPipeline:
         dtype: torch.dtype = torch.bfloat16,
         seed: int = None,
         output_type: str = "pil",
-        return_dict: bool = False,
         ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -191,14 +190,10 @@ class OmniGenPipeline:
                 data type for the model
             output_type (`str`, *optional*, defaults to "pil"):
                 The type of the output image, which can be "pt" or "pil"
-            return_dict (`bool`, *optional*, defaults to True):
-                Whether to return a dictionary with the generated images.
         Examples:
 
         Returns:
-            [`~pipelines.ImagePipelineOutput`] or `tuple`:
-                If return_dict is True, returns a dict with the generated images under the 'images' key.
-                If return_dict is False, returns just the generated images.
+            A list with the generated images.
         """
         # check inputs:
         if use_input_image_size_as_output:
@@ -320,7 +315,4 @@ class OmniGenPipeline:
         torch.cuda.empty_cache()  # Clear VRAM
         gc.collect()              # Run garbage collection to free system RAM
 
-        if not return_dict:
-            return output_images
-            
-        return {"images": output_images}
+        return output_images
