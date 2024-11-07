@@ -84,13 +84,27 @@ cd OmniGen
 pip install -e .
 ```
 
+You also can create a new environment to avoid conflicts:
+```
+# Create a python 3.10.12 conda env (you could also use virtualenv)
+conda create -n omnigen python=3.10.12
+conda activate omnigen
+
+# Install pytorch with your CUDA version, e.g.
+pip install torch==2.3.1+cu118 torchvision --extra-index-url https://download.pytorch.org/whl/cu118
+
+git clone https://github.com/staoxiao/OmniGen.git
+cd OmniGen
+pip install -e .
+```
+
 Here are some examples:
 ```python
 from OmniGen import OmniGenPipeline
 
 pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  
 # Note: Your local model path is also acceptable, such as 'pipe = OmniGenPipeline.from_pretrained(your_local_model_path)', where all files in your_local_model_path should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
-# Note: If the original link https://huggingface.co/Shitao/OmniGen-v1/tree/main is unstable when downloading, it is recommended to use this mirror link https://hf-mirror.com/Shitao/OmniGen-v1/tree/main or other ways in https://hf-mirror.com/  
+
 
 ## Text to Image
 images = pipe(
