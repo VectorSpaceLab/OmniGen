@@ -221,7 +221,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         w = self.input_x_embedder.proj.weight.data
         nn.init.xavier_uniform_(w.view([w.shape[0], -1]))
-        nn.init.constant_(self.x_embedder.proj.bias, 0)
+        nn.init.constant_(self.input_x_embedder.proj.bias, 0)
 
 
         # Initialize timestep embedding MLP:
