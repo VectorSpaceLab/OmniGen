@@ -86,7 +86,7 @@ pip install -e .
 
 You also can create a new environment to avoid conflicts:
 ```
-# Create a python 3.10.12 conda env (you could also use virtualenv)
+# Create a python 3.10.13 conda env (you could also use virtualenv)
 conda create -n omnigen python=3.10.12
 conda activate omnigen
 
