@@ -20,12 +20,12 @@ def sample_timestep(x1):
     return t
 
 
-def training_losses(model, x1, model_kwargs=None, snr_type='uniform'):
+def training_losses(model, x1, model_kwargs=None, snr_type='uniform', patch_weight=None):
     """Loss for training torche score model
     Args:
     - model: backbone model; could be score, noise, or velocity
     - x1: datapoint
-    - model_kwargs: additional arguments for torche model
+    - model_kwargs: additional arguments for torch model
     """
     if model_kwargs == None:
         model_kwargs = {}
@@ -50,13 +50,23 @@ def training_losses(model, x1, model_kwargs=None, snr_type='uniform'):
 
     if isinstance(x1, (list, tuple)):
         assert len(model_output) == len(ut) == len(x1)
-        for i in range(B):
+        if patch_weight is not None:
+            terms["loss"] = th.stack(
+            [((ut[i] - model_output[i]) ** 2 * patch_weight[i]).mean() for i in range(B)],
+            dim=0,
+            )
+        else:
             terms["loss"] = torch.stack(
             [((ut[i] - model_output[i]) ** 2).mean() for i in range(B)],
             dim=0,
             )
     else:
-        terms["loss"] = mean_flat(((model_output - ut) ** 2))
+        if patch_weight is not None:
+            loss = (model_output - ut) ** 2
+            loss = loss * patch_weight
+            terms["loss"] = mean_flat(loss)
+        else:
+            terms["loss"] = mean_flat(((model_output - ut) ** 2))
 
     return terms
 
