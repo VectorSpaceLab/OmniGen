@@ -164,7 +164,7 @@ To use with Google Colab, please use the following command:
 We provide a training script `train.py` to fine-tune OmniGen. 
 Here is a toy example about LoRA finetune:
 ```bash
-accelerate launch --num_processes=1 train.py \
+accelerate launch --num_processes=2 train.py \
     --model_name_or_path Shitao/OmniGen-v1 \
     --batch_size_per_device 2 \
     --condition_dropout_prob 0.01 \
@@ -177,10 +177,10 @@ accelerate launch --num_processes=1 train.py \
     --keep_raw_resolution \
     --max_image_size 1024 \
     --gradient_accumulation_steps 1 \
-    --ckpt_every 10 \
+    --ckpt_every 1 \
     --epochs 200 \
     --log_every 1 \
-    --results_dir ./results/toy_finetune_lora
+    --results_dir ./results/toy_finetune_lora2
 ```
 
 Please refer to [docs/fine-tuning.md](docs/fine-tuning.md) for more details (e.g. full finetune).

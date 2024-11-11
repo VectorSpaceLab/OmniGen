@@ -55,8 +55,9 @@ def main(args):
     accelerator.init_trackers("tensorboard_log", config=args.__dict__)
 
     # Setup an experiment folder:
-    checkpoint_dir = f"{args.results_dir}/checkpoints"  # Stores saved model checkpoints
+    os.makedirs(args.results_dir, exist_ok=True)
     logger = create_logger(args.results_dir)
+    checkpoint_dir = f"{args.results_dir}/checkpoints"  # Stores saved model checkpoints
     if accelerator.is_main_process:
         os.makedirs(checkpoint_dir, exist_ok=True)
         logger.info(f"Experiment directory created at {args.results_dir}")
@@ -233,7 +234,8 @@ def main(args):
                     steps_per_sec = log_steps / args.gradient_accumulation_steps / (end_time - start_time)
                     # Reduce loss history over all processes:
                     avg_loss = torch.tensor(running_loss / log_steps, device=device)
-                    dist.all_reduce(avg_loss, op=dist.ReduceOp.SUM)
+                    if dist.is_available() and dist.is_initialized():
+                        dist.all_reduce(avg_loss, op=dist.ReduceOp.SUM)                        
                     avg_loss = avg_loss.item() / accelerator.num_processes 
                         
                     if accelerator.is_main_process:
@@ -252,15 +254,21 @@ def main(args):
                     ema_state_dict = accelerator.get_state_dict(ema) if ema is not None else None
                 else:
                     if not args.use_lora:
-                        state_dict = model.module.state_dict()
+                        if hasattr(model, "module"):
+                            state_dict = model.module.state_dict()
+                        else:
+                            state_dict = model.state_dict()
                         ema_state_dict = accelerator.get_state_dict(ema) if ema is not None else None
 
                 if accelerator.is_main_process:
                     if args.use_lora:
                         checkpoint_path = f"{checkpoint_dir}/{int(train_steps/args.gradient_accumulation_steps):07d}/"
                         os.makedirs(checkpoint_path, exist_ok=True)
-
-                        model.module.save_pretrained(checkpoint_path)
+                        
+                        if hasattr(model, "module"):
+                            model.module.save_pretrained(checkpoint_path)
+                        else:
+                            model.save_pretrained(checkpoint_path)
                     else:
                         checkpoint_path = f"{checkpoint_dir}/{int(train_steps/args.gradient_accumulation_steps):07d}/"
                         os.makedirs(checkpoint_path, exist_ok=True)
@@ -274,8 +282,9 @@ def main(args):
                             processor.text_tokenizer.save_pretrained(checkpoint_path)
                             model.llm.config.save_pretrained(checkpoint_path)
                     logger.info(f"Saved checkpoint to {checkpoint_path}")
-
-            dist.barrier()
+                    
+            if dist.is_available() and dist.is_initialized():
+                dist.barrier()
     accelerator.end_training()
     model.eval()  
     
