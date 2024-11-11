@@ -11,9 +11,9 @@ class OmniGenCache(DynamicCache):
     def __init__(self, 
                     num_tokens_for_img: int, offload_kv_cache: bool=False) -> None:
         if not torch.cuda.is_available():
-            print("No avaliable GPU, offload_kv_cache wiil be set to False, which will result in large memory usage and time cost when input multiple images!!!")
-            offload_kv_cache = False
-            raise RuntimeError("OffloadedCache can only be used with a GPU")
+            # print("No avaliable GPU, offload_kv_cache wiil be set to False, which will result in large memory usage and time cost when input multiple images!!!")
+            # offload_kv_cache = False
+            raise RuntimeError("OffloadedCache can only be used with a GPU. If there is no GPU, you need to set use_kv_cache=False, which will result in longer inference time!")
         super().__init__()
         self.original_device = []
         self.prefetch_stream = torch.cuda.Stream()

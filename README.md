@@ -79,21 +79,21 @@ If you are not entirely satisfied with certain functionalities or wish to add ne
 ### Using OmniGen
 Install via Github:
 ```bash
-git clone https://github.com/staoxiao/OmniGen.git
+git clone https://github.com/VectorSpaceLab/OmniGen.git
 cd OmniGen
 pip install -e .
 ```
 
 You also can create a new environment to avoid conflicts:
-```
+```bash
 # Create a python 3.10.13 conda env (you could also use virtualenv)
-conda create -n omnigen python=3.10.12
+conda create -n omnigen python=3.10.13
 conda activate omnigen
 
 # Install pytorch with your CUDA version, e.g.
 pip install torch==2.3.1+cu118 torchvision --extra-index-url https://download.pytorch.org/whl/cu118
 
-git clone https://github.com/staoxiao/OmniGen.git
+git clone https://github.com/VectorSpaceLab/OmniGen.git
 cd OmniGen
 pip install -e .
 ```
@@ -104,7 +104,6 @@ from OmniGen import OmniGenPipeline
 
 pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  
 # Note: Your local model path is also acceptable, such as 'pipe = OmniGenPipeline.from_pretrained(your_local_model_path)', where all files in your_local_model_path should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
-
 
 ## Text to Image
 images = pipe(
