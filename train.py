@@ -205,7 +205,28 @@ def main(args):
                         output_images = vae_encode(vae, output_images, weight_dtype)
                         if input_pixel_values is not None:
                             input_pixel_values = vae_encode(vae, input_pixel_values, weight_dtype)
-                   
+                
+                # TODO: weighted loss for image editting
+                # patch_weight = []
+                # for i in range(len(output_images)):
+                #     temp_x = output_images[i]
+                #     w = torch.ones_like(temp_x).detach()
+                #     if temp_x is for editing task:
+                #         # Find the input image corresponding to the output image. We store the index in need_edit_imgs
+                #         input_x = input_pixel_values[need_edit_imgs[i]]
+                #         diff = torch.abs(temp_x - input_x).detach() # no grandient for weight
+                #         diff_mean = torch.mean(diff)
+                #         if diff_mean < 0.001:
+                #             # The difference between the input and output images is too small, so we suspect there might be an issue with this data. We discard the image by setting its weight to zero.
+                #             w = w * 0
+                #         elif diff_mean <= 0.8:
+                #             weight = 1 / (diff_mean + 1e-6)
+                #             weight = max(min(weight, 64), 5) #crop the weight
+                #             w[diff>0.3] = weight  #assign the weight to the pixels which are different in input and output
+                #         else:
+                #             # The difference between the input and output images is significant enough, so there's no need to reinforce the loss.
+                #             pass
+                #     patch_weight.append(w)
 
                 model_kwargs = dict(input_ids=data['input_ids'], input_img_latents=input_pixel_values, input_image_sizes=data['input_image_sizes'], attention_mask=data['attention_mask'], position_ids=data['position_ids'], padding_latent=data['padding_images'], past_key_values=None, return_past_key_values=False)
                 
