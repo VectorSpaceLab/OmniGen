@@ -142,7 +142,7 @@ accelerate launch \
     --condition_dropout_prob 0.01 \
     --lr 1e-3 \
     --use_lora \
-    --lora_rank 8 \
+    --lora_rank 16 \
     --json_file ./toy_data/toy_subject_data.jsonl \
     --image_path ./toy_data/images \
     --max_input_length_limit 18000 \
