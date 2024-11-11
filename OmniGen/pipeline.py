@@ -64,7 +64,7 @@ class OmniGenPipeline:
                 logger.info("Don't detect any available GPUs, using CPU instead, this may take long time to generate image!!!")
                 self.device = torch.device("cpu")
 
-        self.model.to(torch.bfloat16)
+        # self.model.to(torch.bfloat16)
         self.model.eval()
         self.vae.eval()
 
@@ -206,9 +206,11 @@ class OmniGenPipeline:
             prompt = [prompt]
             input_images = [input_images] if input_images is not None else None
         
+
         # set model and processor
         if max_input_image_size != self.processor.max_image_size:
             self.processor = OmniGenProcessor(self.processor.text_tokenizer, max_image_size=max_input_image_size)
+        self.model.to(dtype)
         if offload_model:
             self.enable_model_cpu_offload()
         else:
@@ -266,7 +268,6 @@ class OmniGenPipeline:
             func = self.model.forward_with_separate_cfg
         else:
             func = self.model.forward_with_cfg
-        self.model.to(dtype)
 
         if self.model_cpu_offload:
             for name, param in self.model.named_parameters():
