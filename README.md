@@ -105,16 +105,6 @@ from OmniGen import OmniGenPipeline
 pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1")  
 # Note: Your local model path is also acceptable, such as 'pipe = OmniGenPipeline.from_pretrained(your_local_model_path)', where all files in your_local_model_path should be organized as https://huggingface.co/Shitao/OmniGen-v1/tree/main
 
-images = pipe(
-    prompt="Output the segmentation map of this image: <img><|image_1|></img>", 
-    input_images=["/share/shitao/wyz/datasets/HR-VITON/images/train-00004-of-00010-47396f0ec2f868e0/08878_00-image.jpg"],
-    height=1024, 
-    width=768, 
-    guidance_scale=2.5,
-    seed=0,
-)
-images[0].save("example_t2i.png") 
-
 ## Text to Image
 images = pipe(
     prompt="A curly-haired man in a red shirt is drinking tea.", 
