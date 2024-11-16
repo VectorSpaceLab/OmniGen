@@ -94,8 +94,8 @@ class TrainDataCollator(OmniGenCollator):
         all_padded_input_ids, all_position_ids, all_attention_mask, all_padding_images, all_pixel_values, all_image_sizes = self.process_mllm_input(mllm_inputs, target_img_size)
 
         if not self.keep_raw_resolution:
-            output_image = torch.cat(output_image, dim=0)
-            if len(pixel_values) > 0:
+            output_images = torch.cat(output_images, dim=0)
+            if len(all_pixel_values) > 0:
                 all_pixel_values = torch.cat(all_pixel_values, dim=0)
             else:
                 all_pixel_values = None

@@ -153,6 +153,27 @@ accelerate launch \
     --epochs 200 \
     --log_every 1 \
     --results_dir ./results/toy_finetune_lora
+
+
+export HF_HUB_CACHE="/share/shitao/downloaded_models2"
+accelerate launch \
+    --num_processes=1 \
+    train.py \
+    --model_name_or_path Shitao/OmniGen-v1 \
+    --batch_size_per_device 2 \
+    --condition_dropout_prob 0.01 \
+    --lr 1e-3 \
+    --use_lora \
+    --lora_rank 16 \
+    --json_file ./toy_data/toy_subject_data.jsonl \
+    --image_path ./toy_data/images \
+    --max_input_length_limit 18000 \
+    --max_image_size 1024 \
+    --gradient_accumulation_steps 1 \
+    --ckpt_every 50 \
+    --epochs 200 \
+    --log_every 1 \
+    --results_dir ./results/toy_finetune_lora2
 ```
 
 After training, you can use the following command to generate images:
