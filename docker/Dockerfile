@@ -7,6 +7,7 @@ RUN apt-get update \
  && cd OmniGen \
  && pip install --break-system-packages -e . \
  && pip install --break-system-packages gradio spaces \
+ && pip cache purge \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && sed -i 's/demo\.launch(.*)/demo.launch(server_name="0.0.0.0")/' app.py
