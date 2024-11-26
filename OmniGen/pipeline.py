@@ -88,7 +88,7 @@ class OmniGenPipeline:
         if device is None:
             device = best_available_device()
 
-        model = OmniGen.from_pretrained(model_name, dtype=torch.bfloat16, device=device, low_cpu_mem_usage=low_cpu_mem_usage)
+        model = OmniGen.from_pretrained(model_name, dtype=torch.bfloat16, low_cpu_mem_usage=low_cpu_mem_usage)
         processor = OmniGenProcessor.from_pretrained(model_name)
 
         if vae_path is None:

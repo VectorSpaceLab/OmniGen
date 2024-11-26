@@ -189,7 +189,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         self.llm.config.use_cache = False
     
     @classmethod
-    def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, device: str|torch.device='cuda', low_cpu_mem_usage: bool = True,):
+    def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, low_cpu_mem_usage: bool = True,):
         if not os.path.exists(model_name):
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
@@ -210,12 +210,12 @@ class OmniGen(nn.Module, PeftAdapterMixin):
                 model = cls(config)
         
             model.load_state_dict(ckpt, assign=True)
-            model = model.to(device, dtype)
+            model = model.to(dtype)
         else:
             config = Phi3Config.from_pretrained(model_name)
             model = cls(config)
             model.load_state_dict(ckpt)
-            model = model.to(device, dtype)
+            model = model.to(dtype)
         
         del ckpt
         torch.cuda.empty_cache()
