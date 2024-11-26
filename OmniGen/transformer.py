@@ -42,7 +42,7 @@ class Phi3Transformer(Phi3Model):
         for name, param in self.layers[prev_layer_idx].named_parameters():
             param.data = param.data.to("cpu", non_blocking=True)
             
-    def get_offlaod_layer(self, layer_idx: int, device: torch.device):
+    def get_offload_layer(self, layer_idx: int, device: torch.device):
         # init stream
         if not hasattr(self, "prefetch_stream"):
             self.prefetch_stream = torch.cuda.Stream()
@@ -153,7 +153,7 @@ class Phi3Transformer(Phi3Model):
                 )
             else:
                 if offload_model and not self.training:
-                    self.get_offlaod_layer(layer_idx, device=inputs_embeds.device)
+                    self.get_offload_layer(layer_idx, device=inputs_embeds.device)
                 layer_outputs = decoder_layer(
                     hidden_states,
                     attention_mask=attention_mask,
