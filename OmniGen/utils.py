@@ -1,8 +1,13 @@
+import gc
 import logging
 
 from PIL import Image
 import torch
 import numpy as np
+
+from transformers import BitsAndBytesConfig
+from transformers.quantizers import AutoHfQuantizer
+from transformers.integrations import  replace_with_bnb_linear, set_module_quantized_tensor_to_device
 
 def create_logger(logging_dir):
     """
@@ -108,3 +113,24 @@ def vae_encode_list(vae, x, weight_dtype):
         latents.append(img)
     return latents
 
+
+
+@torch.no_grad()
+def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesConfig, pre_quantized=False):
+    # from transformers.integrations import get_keys_to_not_convert
+    
+    quantizer = AutoHfQuantizer.from_config(quantization_config, pre_quantized=pre_quantized)        
+    no_convert = [] #get_keys_to_not_convert(meta_model.llm) # might be worth investigating
+    
+    model = replace_with_bnb_linear(meta_model, modules_to_not_convert=no_convert, quantization_config=quantizer.quantization_config) 
+    
+    for param_name, param in state_dict.items():        
+        if not quantizer.check_quantized_param(model, param, param_name, state_dict):
+            set_module_quantized_tensor_to_device(model, param_name, device=0, value=param)
+        else:
+            quantizer.create_quantized_param(model, param, param_name, target_device=0, state_dict=state_dict)
+        
+    del state_dict
+    torch.cuda.empty_cache()
+    gc.collect()
+    return model
