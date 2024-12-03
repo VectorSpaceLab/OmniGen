@@ -116,15 +116,22 @@ def vae_encode_list(vae, x, weight_dtype):
 
 
 @torch.no_grad()
-def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesConfig, pre_quantized=False):
+def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesConfig, pre_quantized=None):
     # from transformers.integrations import get_keys_to_not_convert
+    if pre_quantized is None:
+        if quantization_config.load_in_4bit:
+            pre_quantized = any('bitsandbytes__' in k for k in state_dict)
+        elif quantization_config.load_in_8bit:
+            pre_quantized = any('weight_format' in k for k in state_dict)
     
     quantizer = AutoHfQuantizer.from_config(quantization_config, pre_quantized=pre_quantized)        
     no_convert = [] #get_keys_to_not_convert(meta_model.llm) # might be worth investigating
     
     model = replace_with_bnb_linear(meta_model, modules_to_not_convert=no_convert, quantization_config=quantizer.quantization_config) 
-    
-    for param_name, param in state_dict.items():        
+
+    # iterate the model keys, otherwise quantized state dict will throws errors    
+    for param_name in model.state_dict():        
+        param = state_dict.get(param_name)
         if not quantizer.check_quantized_param(model, param, param_name, state_dict):
             set_module_quantized_tensor_to_device(model, param_name, device=0, value=param)
         else:
