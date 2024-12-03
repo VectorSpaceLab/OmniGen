@@ -1,6 +1,8 @@
 # The code is revised from DiT
 import os
 import gc
+import warnings
+from pathlib import Path
 import torch
 import torch.nn as nn
 import numpy as np
@@ -165,6 +167,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         pos_embed_max_size: int = 192,
     ):
         super().__init__()
+        self.config = transformer_config
         self.in_channels = in_channels
         self.out_channels = in_channels
         self.patch_size = patch_size
@@ -191,41 +194,59 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         # bnb 4bit quantized models cannot be offloaded
         self.offloadable = True
-        self.quantization_config = None
     
     @classmethod
     def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
-        if not os.path.exists(model_name):
-            cache_folder = os.getenv('HF_HUB_CACHE')
-            model_name = snapshot_download(repo_id=model_name,
-                                           cache_dir=cache_folder,
-                                           ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
+        model_path = Path(model_name)
         
-        model_path = os.path.join(model_name, 'model.safetensors')
-        if not os.path.exists(model_path):
-            model_path = os.path.join(model_name, 'model.pt')
-            ckpt = torch.load(model_path, map_location='cpu')
+        if model_path.exists():
+            if model_path.is_dir():
+                if (weights_loc := list(model_path.glob('*.safetensors'))):
+                    model_path = weights_loc[0]
+                elif (weights_loc := list(model_path.glob('*.pt'))):
+                    model_path = weights_loc[0]
+                else:
+                    raise FileNotFoundError(f'No .safetensors or .pt model weights found in {model_path.as_posix()!r}')
+                
         else:
-            #print("Loading safetensors")
-            ckpt = load_file(model_path, 'cpu')
+            cache_folder = os.getenv('HF_HUB_CACHE')
+            model_path = snapshot_download(repo_id=model_name, cache_dir=cache_folder,
+                                                ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
+            
+            # assume hub files are always .safetensors
+            model_path = next(Path(model_path).glob('*.safetensors'))
+        
+        ckpt = (load_file(model_path, 'cpu') if model_path.suffix == '.safetensors' else 
+                torch.load(model_path, map_location='cpu'))
+        
+        config = Phi3Config.from_pretrained(model_name)
+
+        if hasattr(config, 'quantization_config'):
+            if quantization_config is not None:
+                # from: diffusers.quantizers.auto
+                warnings.warn(
+                    "You passed `quantization_config` or equivalent parameters to `from_pretrained` but the model you're loading"
+                    " already has a `quantization_config` attribute. The `quantization_config` from the model will be used."
+                )
+            
+            config.quantization_config.pop("quant_method",None) # prevent unused keys warning
+            quantization_config = BitsAndBytesConfig.from_dict(config.quantization_config)
 
         if low_cpu_mem_usage:
             with init_empty_weights():
-                config = Phi3Config.from_pretrained(model_name)
                 model = cls(config)
             
             if quantization_config:
-                model = quantize_bnb(model, ckpt, quantization_config=quantization_config, pre_quantized=False)
+                model = quantize_bnb(model, ckpt, quantization_config=quantization_config)
                 if getattr(quantization_config, 'load_in_4bit', None):
                     model.offloadable = False
-                model.quantization_config = quantization_config
+                model.config.quantization_config = quantization_config
             else:
                 model.load_state_dict(ckpt, assign=True)
         else:
             if quantization_config:
                 raise ValueError('Quantization not supported for `low_cpu_mem_usage=False`.')
             
-            config = Phi3Config.from_pretrained(model_name)
             model = cls(config)
             model.load_state_dict(ckpt)
         

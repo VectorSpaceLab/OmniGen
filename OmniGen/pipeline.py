@@ -1,5 +1,6 @@
 import os
 import inspect
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union, Literal
 import gc
 
@@ -77,37 +78,54 @@ class OmniGenPipeline:
         self.model_cpu_offload = False
 
     @classmethod
-    def from_pretrained(cls, model_name, vae_path: str=None, device=None, quantization_config:Literal['bnb_4bit','bnb_8bit']|BitsAndBytesConfig=None, low_cpu_mem_usage=True):
-        if not os.path.exists(model_name) or (not os.path.exists(os.path.join(model_name, 'model.safetensors')) and model_name == "Shitao/OmniGen-v1"):
+    def from_pretrained(cls, model_name, vae_path: str=None, device=None, quantization_config:Literal['bnb_4bit','bnb_8bit']|BitsAndBytesConfig=None, low_cpu_mem_usage=True, **kwargs):
+        pretrained_path = Path(model_name)
+        
+        # XXX: Consider renaming 'model' to 'transformer' conform to diffusers pipeline syntax
+        model = kwargs.get('model', None)
+        processor = kwargs.get('processor', None)
+        vae = kwargs.get('vae', None)
+
+        # NOTE: should technically allow delayed component inits via model/vae = None, but seems like more of a footgun than it's worth at this point
+        
+        if not pretrained_path.exists():
+            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5', 'model.pt']
+
+            if model is not None:
+                ignore_patterns.append('model.safetensors') # avoid downloading bf16 model if passing existing model
+            
             logger.info("Model not found, downloading...")
             cache_folder = os.getenv('HF_HUB_CACHE')
-            model_name = snapshot_download(repo_id=model_name,
-                                           cache_dir=cache_folder,
-                                           ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5', 'model.pt'])
-            logger.info(f"Downloaded model to {model_name}")
-        
-        if device is None:
-            device = best_available_device()
-        
-        if isinstance(quantization_config, str):
-            if quantization_config == 'bnb_4bit':
-                quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float32, bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=False)
-            elif quantization_config == 'bnb_8bit':
-                quantization_config = BitsAndBytesConfig(load_in_8bit=True)
-            else:
-                raise NotImplementedError(f'Unknown `quantization_config` {quantization_config!r}')
-        
-        model = OmniGen.from_pretrained(model_name, dtype=torch.bfloat16, quantization_config=quantization_config, low_cpu_mem_usage=low_cpu_mem_usage)
-        processor = OmniGenProcessor.from_pretrained(model_name)
+            pretrained_path = Path(snapshot_download(repo_id=model_name, cache_dir=cache_folder, ignore_patterns=ignore_patterns))
+            logger.info(f"Downloaded model to {pretrained_path}")
 
-        if vae_path is None:
-            vae_path = os.path.join(model_name, "vae")
+        _quant_alias = {
+            'bnb_4bit': BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float32, bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=False),
+            'bnb_8bit': BitsAndBytesConfig(load_in_8bit=True),
+        }
         
-        if not os.path.exists(vae_path):
-            logger.info(f"No VAE found in {model_name}, downloading stabilityai/sdxl-vae from HF")
-            vae_path = "stabilityai/sdxl-vae"
+        if model is None:    
+            if isinstance(quantization_config, str):
+                try:
+                    quantization_config = _quant_alias[quantization_config]
+                except KeyError:
+                    raise NotImplementedError(f'Unknown `quantization_config` {quantization_config!r}')
             
-        vae = AutoencoderKL.from_pretrained(vae_path)
+            model = OmniGen.from_pretrained(pretrained_path, dtype=torch.bfloat16, quantization_config=quantization_config, low_cpu_mem_usage=low_cpu_mem_usage)
+        
+
+        if processor is None:
+            processor = OmniGenProcessor.from_pretrained(model_name)
+
+        if vae is None:
+            if vae_path is None:
+                vae_path = pretrained_path.joinpath("vae")
+            
+            if not os.path.exists(vae_path):
+                logger.info(f"No VAE found in {model_name}, downloading stabilityai/sdxl-vae from HF")
+                vae_path = "stabilityai/sdxl-vae"
+                
+            vae = AutoencoderKL.from_pretrained(vae_path)
 
         return cls(vae, model, processor, device)
     
