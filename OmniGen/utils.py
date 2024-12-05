@@ -7,7 +7,7 @@ import numpy as np
 
 from transformers import BitsAndBytesConfig
 from transformers.quantizers import AutoHfQuantizer
-from transformers.integrations import  replace_with_bnb_linear, set_module_quantized_tensor_to_device
+from transformers.integrations import  replace_with_bnb_linear, set_module_quantized_tensor_to_device, get_keys_to_not_convert
 
 def create_logger(logging_dir):
     """
@@ -116,27 +116,40 @@ def vae_encode_list(vae, x, weight_dtype):
 
 
 @torch.no_grad()
-def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesConfig, pre_quantized=None):
-    # from transformers.integrations import get_keys_to_not_convert
+def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesConfig, pre_quantized=None, dtype=None):
     if pre_quantized is None:
         if quantization_config.load_in_4bit:
             pre_quantized = any('bitsandbytes__' in k for k in state_dict)
         elif quantization_config.load_in_8bit:
             pre_quantized = any('weight_format' in k for k in state_dict)
     
-    quantizer = AutoHfQuantizer.from_config(quantization_config, pre_quantized=pre_quantized)        
-    no_convert = [] #get_keys_to_not_convert(meta_model.llm) # might be worth investigating
+    if quantization_config.llm_int8_skip_modules is None:
+        quantization_config.llm_int8_skip_modules = get_keys_to_not_convert(meta_model.llm) # ['norm']
     
-    model = replace_with_bnb_linear(meta_model, modules_to_not_convert=no_convert, quantization_config=quantizer.quantization_config) 
+    quantizer = AutoHfQuantizer.from_config(quantization_config, pre_quantized=pre_quantized)        
+    
+    meta_model.eval()
+    meta_model.requires_grad_(False)
+    
+    model = meta_model
 
-    # iterate the model keys, otherwise quantized state dict will throws errors    
-    for param_name in model.state_dict():        
+    quantizer.preprocess_model(model, device_map=None,)
+    
+    # iterate the model keys, otherwise quantized state dict will throws errors
+    for param_name in model.state_dict():
         param = state_dict.get(param_name)
+        if not pre_quantized:
+            param = param.to(dtype)
+        
         if not quantizer.check_quantized_param(model, param, param_name, state_dict):
             set_module_quantized_tensor_to_device(model, param_name, device=0, value=param)
         else:
             quantizer.create_quantized_param(model, param, param_name, target_device=0, state_dict=state_dict)
         
+        del state_dict[param_name], param
+    
+    model = quantizer.postprocess_model(model)
+    
     del state_dict
     torch.cuda.empty_cache()
     gc.collect()
