@@ -113,6 +113,7 @@ class OmniGenPipeline:
             
             model = OmniGen.from_pretrained(pretrained_path, dtype=torch.bfloat16, quantization_config=quantization_config, low_cpu_mem_usage=low_cpu_mem_usage)
         
+        model = model.requires_grad_(False).eval()
 
         if processor is None:
             processor = OmniGenProcessor.from_pretrained(model_name)
@@ -125,7 +126,7 @@ class OmniGenPipeline:
                 logger.info(f"No VAE found in {model_name}, downloading stabilityai/sdxl-vae from HF")
                 vae_path = "stabilityai/sdxl-vae"
                 
-            vae = AutoencoderKL.from_pretrained(vae_path)
+            vae = AutoencoderKL.from_pretrained(vae_path, low_cpu_mem_usage=low_cpu_mem_usage)
 
         return cls(vae, model, processor, device)
     
@@ -158,7 +159,7 @@ class OmniGenPipeline:
 
     def enable_model_cpu_offload(self):
         self.model_cpu_offload = True
-        if self.model.offloadable:
+        if not self.model.quantized:
             self.model.to("cpu")
         self.vae.to("cpu")
         torch.cuda.empty_cache()  # Clear VRAM
@@ -248,8 +249,13 @@ class OmniGenPipeline:
         # set model and processor
         if max_input_image_size != self.processor.max_image_size:
             self.processor = OmniGenProcessor(self.processor.text_tokenizer, max_image_size=max_input_image_size)
-        self.model.to(dtype)
+        
+        if not self.model.quantized:
+            self.model.dtype = dtype
+            self.model.to(dtype)
+        
         #self.vae.to(dtype) # Uncomment this line to allow bfloat16 VAE
+        
         if offload_model:
             self.enable_model_cpu_offload()
         else:
@@ -271,7 +277,7 @@ class OmniGenPipeline:
         else:
             generator = None
         latents = torch.randn(num_prompt, 4, latent_size_h, latent_size_w, device=self.device, generator=generator)
-        latents = torch.cat([latents]*(1+num_cfg), 0).to(dtype)
+        latents = torch.cat([latents]*(1+num_cfg), 0).to(self.model.dtype)
 
         if input_images is not None and self.model_cpu_offload: self.vae.to(self.device)
         input_img_latents = []
@@ -279,12 +285,12 @@ class OmniGenPipeline:
             for temp_pixel_values in input_data['input_pixel_values']:
                 temp_input_latents = []
                 for img in temp_pixel_values:
-                    img = self.vae_encode(img.to(self.vae.device, self.vae.dtype), dtype)
+                    img = self.vae_encode(img.to(self.vae.device, self.vae.dtype), self.model.dtype)
                     temp_input_latents.append(img)
                 input_img_latents.append(temp_input_latents)
         else:
             for img in input_data['input_pixel_values']:
-                img = self.vae_encode(img.to(self.vae.device, self.vae.dtype), dtype)
+                img = self.vae_encode(img.to(self.vae.device, self.vae.dtype), self.model.dtype)
                 input_img_latents.append(img)
         if input_images is not None and self.model_cpu_offload:
             self.vae.to('cpu')
@@ -300,7 +306,7 @@ class OmniGenPipeline:
             img_cfg_scale=img_guidance_scale,
             use_img_cfg=use_img_guidance,
             use_kv_cache=use_kv_cache,
-            offload_model=offload_model,
+            offload_model=(offload_model and not self.model.quantized),
             )
         
         if separate_cfg_infer:
@@ -308,14 +314,16 @@ class OmniGenPipeline:
         else:
             func = self.model.forward_with_cfg
 
-        if self.model_cpu_offload and self.model.offloadable:
+        if self.model_cpu_offload and not self.model.quantized:
             for name, param in self.model.named_parameters():
                 if 'layers' in name and 'layers.0' not in name:
-                    param.data = param.data.cpu()
+                    param.data = param.data.to('cpu')
                 else:
                     param.data = param.data.to(self.device)
             for buffer_name, buffer in self.model.named_buffers():
                 setattr(self.model, buffer_name, buffer.to(self.device))
+            torch.cuda.empty_cache()  
+            gc.collect()  
         # else:
         #     self.model.to(self.device)
 
@@ -323,8 +331,10 @@ class OmniGenPipeline:
         samples = scheduler(latents, func, model_kwargs, use_kv_cache=use_kv_cache, offload_kv_cache=offload_kv_cache)
         samples = samples.chunk((1+num_cfg), dim=0)[0]
 
-        if self.model_cpu_offload and self.model.offloadable:
-            self.model.to('cpu')
+        if self.model_cpu_offload:
+            if not self.model.quantized:
+                self.model.to("cpu")
+
             torch.cuda.empty_cache()  
             gc.collect()  
 

@@ -196,8 +196,9 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         self.llm = Phi3Transformer(config=transformer_config)
         self.llm.config.use_cache = False
 
-        # bnb 4bit quantized models cannot be offloaded
-        self.offloadable = True
+        # bnb quantized models cannot easily be offloaded or recast
+        self.quantized = False
+        self.dtype = None
     
     @classmethod
     def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
@@ -244,9 +245,8 @@ class OmniGen(nn.Module, PeftAdapterMixin):
                 model = cls(config)
             
             if quantization_config:
-                model = quantize_bnb(model, ckpt, quantization_config=quantization_config)
-                if getattr(quantization_config, 'load_in_4bit', None):
-                    model.offloadable = False
+                model = quantize_bnb(model, ckpt, quantization_config=quantization_config, dtype=dtype)
+                model.quantized = True
                 model.config.quantization_config = quantization_config
             else:
                 model.load_state_dict(ckpt, assign=True)
@@ -257,7 +257,8 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             model = cls(config)
             model.load_state_dict(ckpt)
         
-        model = model.to(dtype)
+        model.dtype = dtype
+        
         del ckpt
         torch.cuda.empty_cache()
         gc.collect()
