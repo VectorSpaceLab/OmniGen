@@ -78,7 +78,7 @@ class OmniGenPipeline:
         self.model_cpu_offload = False
 
     @classmethod
-    def from_pretrained(cls, model_name, vae_path: str=None, device=None, quantization_config:Literal['bnb_4bit','bnb_8bit']|BitsAndBytesConfig=None, low_cpu_mem_usage=True, **kwargs):
+    def from_pretrained(cls, model_name, vae_path: str=None, device=None, low_cpu_mem_usage=True, **kwargs):
         pretrained_path = Path(model_name)
         
         # XXX: Consider renaming 'model' to 'transformer' conform to diffusers pipeline syntax
@@ -98,20 +98,9 @@ class OmniGenPipeline:
             cache_folder = os.getenv('HF_HUB_CACHE')
             pretrained_path = Path(snapshot_download(repo_id=model_name, cache_dir=cache_folder, ignore_patterns=ignore_patterns))
             logger.info(f"Downloaded model to {pretrained_path}")
-
-        _quant_alias = {
-            'bnb_4bit': BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float32, bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=False),
-            'bnb_8bit': BitsAndBytesConfig(load_in_8bit=True),
-        }
         
-        if model is None:    
-            if isinstance(quantization_config, str):
-                try:
-                    quantization_config = _quant_alias[quantization_config]
-                except KeyError:
-                    raise NotImplementedError(f'Unknown `quantization_config` {quantization_config!r}')
-            
-            model = OmniGen.from_pretrained(pretrained_path, dtype=torch.bfloat16, quantization_config=quantization_config, low_cpu_mem_usage=low_cpu_mem_usage)
+        if model is None:
+            model = OmniGen.from_pretrained(pretrained_path, dtype=torch.bfloat16, quantization_config=None, low_cpu_mem_usage=low_cpu_mem_usage)
         
         model = model.requires_grad_(False).eval()
 

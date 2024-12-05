@@ -4,9 +4,9 @@ import os
 import argparse
 import random
 import spaces
+from transformers import BitsAndBytesConfig
 
-from OmniGen import OmniGenPipeline
-
+from OmniGen import OmniGenPipeline, OmniGen
 
 @spaces.GPU(duration=180)
 def generate_image(text, img1, img2, img3, height, width, guidance_scale, img_guidance_scale, inference_steps, seed, separate_cfg_infer, offload_model,
@@ -425,19 +425,19 @@ if __name__ == "__main__":
     parser.add_argument('--share', action='store_true', help='Share the Gradio app')
     parser.add_argument('-b', '--nbits', choices=['4','8'], help='bitsandbytes quantization n-bits')
     args = parser.parse_args()
-
-    if args.nbits == '4':
-        quantization_config = 'bnb_4bit'
-    elif args.nbits == '8':
-        quantization_config = 'bnb_8bit'
-    else:
-        quantization_config = None
     
-    pipe = OmniGenPipeline.from_pretrained(
-        "Shitao/OmniGen-v1",
-        quantization_config = quantization_config,
-        low_cpu_mem_usage=True,
-    )
+    quantization_config = None
+    model = None
+    if args.nbits:
+        if args.nbits == '4':
+            quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4')
+        elif args.nbits == '8':
+            quantization_config = BitsAndBytesConfig(load_in_8bit=True)
+        
+        model = OmniGen.from_pretrained("Shitao/OmniGen-v1", quantization_config=quantization_config)
+
+    
+    pipe = OmniGenPipeline.from_pretrained("Shitao/OmniGen-v1", model=model)
     
     # launch
     demo.launch(share=args.share)
