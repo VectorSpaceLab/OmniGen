@@ -10,6 +10,7 @@ import math
 from typing import Dict
 
 from diffusers.loaders import PeftAdapterMixin
+from diffusers.utils import logging
 from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
 from huggingface_hub import snapshot_download
 from safetensors.torch import load_file
@@ -18,6 +19,9 @@ from transformers import BitsAndBytesConfig
 
 from OmniGen.transformer import Phi3Config, Phi3Transformer
 from OmniGen.utils import quantize_bnb
+
+
+logger = logging.get_logger(__name__) 
 
 def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
@@ -198,7 +202,8 @@ class OmniGen(nn.Module, PeftAdapterMixin):
     @classmethod
     def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
         model_path = Path(model_name)
-        
+        config_loc = model_name # these only diverge when model_name is *.safetensors or *.pt file
+
         if model_path.exists():
             if model_path.is_dir():
                 if (weights_loc := list(model_path.glob('*.safetensors'))):
@@ -207,7 +212,9 @@ class OmniGen(nn.Module, PeftAdapterMixin):
                     model_path = weights_loc[0]
                 else:
                     raise FileNotFoundError(f'No .safetensors or .pt model weights found in {model_path.as_posix()!r}')
-                
+            else:
+                logger.info("Loading model weights from file. Using default config from 'Shitao/OmniGen-v1'.")
+                config_loc = "Shitao/OmniGen-v1"
         else:
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_path = snapshot_download(repo_id=model_name, cache_dir=cache_folder,
@@ -219,7 +226,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         ckpt = (load_file(model_path, 'cpu') if model_path.suffix == '.safetensors' else 
                 torch.load(model_path, map_location='cpu'))
         
-        config = Phi3Config.from_pretrained(model_name)
+        config = Phi3Config.from_pretrained(config_loc)
 
         if hasattr(config, 'quantization_config'):
             if quantization_config is not None:
