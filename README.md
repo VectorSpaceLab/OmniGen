@@ -153,7 +153,7 @@ python app.py
 To use with Google Colab, please use the following command:
 
 ```
-!git clone https://github.com/staoxiao/OmniGen.git
+!git clone https://github.com/VectorSpaceLab/OmniGen.git
 %cd OmniGen
 !pip install -e .
 !pip install gradio spaces
