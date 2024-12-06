@@ -23,7 +23,6 @@ pip install -e .
 ### Fine-tuning command
 
 ```bash
-export HF_HUB_CACHE="/share/shitao/downloaded_models2"
 accelerate launch \
     --num_processes=1 \
     --use_fsdp \
