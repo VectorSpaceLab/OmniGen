@@ -150,7 +150,6 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=True,
         drop_last=True,
-        prefetch_factor=2,
     )
     
     if accelerator.is_main_process:
