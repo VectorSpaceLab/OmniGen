@@ -8,3 +8,4 @@ pillow==10.2.0
 peft==0.13.2
 diffusers==0.30.3
 timm==0.9.16
+bitsandbytes==0.44.1
