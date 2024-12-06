@@ -330,7 +330,6 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         left = (self.pos_embed_max_size - width) // 2
         spatial_pos_embed = self.pos_embed.reshape(1, self.pos_embed_max_size, self.pos_embed_max_size, -1)
         spatial_pos_embed = spatial_pos_embed[:, top : top + height, left : left + width, :]
-        # print(top, top + height, left, left + width, spatial_pos_embed.size())
         spatial_pos_embed = spatial_pos_embed.reshape(1, -1, spatial_pos_embed.shape[-1])
         return spatial_pos_embed
 
@@ -396,6 +395,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             input_emb = torch.cat([condition_embeds, time_token, x], dim=1)
         else:
             input_emb = torch.cat([time_token, x], dim=1)
+
         output = self.llm(inputs_embeds=input_emb, attention_mask=attention_mask, position_ids=position_ids, past_key_values=past_key_values, offload_model=offload_model)
         output, past_key_values = output.last_hidden_state, output.past_key_values
         if input_is_list:
@@ -412,6 +412,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             time_emb = self.t_embedder(timestep, dtype=x.dtype)
             x = self.final_layer(image_embedding, time_emb)
             latents = self.unpatchify(x, shapes[0], shapes[1])
+            
 
         if return_past_key_values:
             return latents, past_key_values

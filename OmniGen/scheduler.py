@@ -29,7 +29,6 @@ class OmniGenCache(DynamicCache):
                 self.key_cache[layer_idx] = self.key_cache[layer_idx].to(device, non_blocking=True)
                 self.value_cache[layer_idx] = self.value_cache[layer_idx].to(device, non_blocking=True)
 
-    
     def evict_previous_layer(self, layer_idx: int):
         "Moves the previous layer cache to the CPU"
         if len(self) > 2:
@@ -122,6 +121,7 @@ class OmniGenScheduler:
         t = torch.linspace(0, 1, num_steps+1)
         t = t / (t + time_shifting_factor - time_shifting_factor * t)
         self.sigma = t
+
     
     def crop_kv_cache(self, past_key_values, num_tokens_for_img):
         # return 
