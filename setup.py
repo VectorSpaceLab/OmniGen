@@ -17,7 +17,7 @@ setup(
         'torch<2.5',
         'transformers>=4.45.2',
         'datasets',
-        'accelerate>=0.26.1',
+        'accelerate==0.26.1',
         'diffusers>=0.30.3',
         "timm",
         "peft>=0.9.0",

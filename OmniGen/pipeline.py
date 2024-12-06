@@ -78,7 +78,8 @@ class OmniGenPipeline:
     @classmethod
     def from_pretrained(cls, model_name, vae_path: str=None, device=None, low_cpu_mem_usage=True):
         if not os.path.exists(model_name) or (not os.path.exists(os.path.join(model_name, 'model.safetensors')) and model_name == "Shitao/OmniGen-v1"):
-            logger.info("Model not found, downloading...")
+            # logger.info("Model not found, downloading...")
+            print("Model not found, downloading...")
             cache_folder = os.getenv('HF_HUB_CACHE')
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
