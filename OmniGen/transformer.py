@@ -40,7 +40,7 @@ class Phi3Transformer(Phi3Model):
         "Moves the previous layer cache to the CPU"
         prev_layer_idx = layer_idx - 1
         for name, param in self.layers[prev_layer_idx].named_parameters():
-            param.data = param.data.to("cpu", non_blocking=True)
+            param.data = param.data.to("cpu")
             
     def get_offlaod_layer(self, layer_idx: int, device: torch.device):
         # init stream
@@ -48,11 +48,14 @@ class Phi3Transformer(Phi3Model):
             self.prefetch_stream = torch.cuda.Stream()
 
         # delete previous layer
-        torch.cuda.current_stream().synchronize()
-        self.evict_previous_layer(layer_idx)
+        # main stream sync shouldn't be necessary since all computation on iter i-1 is finished by iter i
+        # torch.cuda.current_stream().synchronize()
+        # avoid extra eviction of last layer
+        if layer_idx > 0:
+            self.evict_previous_layer(layer_idx)
         
         # make sure the current layer is ready
-        torch.cuda.synchronize(self.prefetch_stream)
+        self.prefetch_stream.synchronize()
 
         # load next layer
         self.prefetch_layer((layer_idx + 1) % len(self.layers), device)
@@ -133,10 +136,9 @@ class Phi3Transformer(Phi3Model):
         all_self_attns = () if output_attentions else None
         next_decoder_cache = None
 
-        layer_idx = -1
-        for decoder_layer in self.layers:
-            layer_idx += 1
-
+        for layer_idx in range(len(self.layers)):
+            # direct indexing since offloading may mutate self.layers during iteration 
+            decoder_layer = self.layers[layer_idx]
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
