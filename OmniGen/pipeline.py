@@ -41,6 +41,15 @@ EXAMPLE_DOC_STRING = """
         ```
 """
 
+def best_available_device():
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        logger.info("Don't detect any available GPUs, using CPU instead, this may take long time to generate image!!!")
+        device = torch.device("cpu")
+    return device
 
 class OmniGenPipeline:
     def __init__(
@@ -55,14 +64,10 @@ class OmniGenPipeline:
         self.processor = processor
         self.device = device
 
-        if device is None:
-            if torch.cuda.is_available():
-                self.device = torch.device("cuda")
-            elif torch.backends.mps.is_available():
-                self.device = torch.device("mps")
-            else:
-                logger.info("Don't detect any available GPUs, using CPU instead, this may take long time to generate image!!!")
-                self.device = torch.device("cpu")
+        if self.device is None:
+            self.device = best_available_device()
+        elif isinstance(self.device, str):
+            self.device = torch.device(self.device)
 
         # self.model.to(torch.bfloat16)
         self.model.eval()
@@ -71,7 +76,7 @@ class OmniGenPipeline:
         self.model_cpu_offload = False
 
     @classmethod
-    def from_pretrained(cls, model_name, vae_path: str=None):
+    def from_pretrained(cls, model_name, vae_path: str=None, device=None, low_cpu_mem_usage=True):
         if not os.path.exists(model_name) or (not os.path.exists(os.path.join(model_name, 'model.safetensors')) and model_name == "Shitao/OmniGen-v1"):
             # logger.info("Model not found, downloading...")
             print("Model not found, downloading...")
@@ -79,20 +84,24 @@ class OmniGenPipeline:
             model_name = snapshot_download(repo_id=model_name,
                                            cache_dir=cache_folder,
                                            ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5', 'model.pt'])
-            # logger.info(f"Downloaded model to {model_name}")
-            print(f"Downloaded model to {model_name}")
-        model = OmniGen.from_pretrained(model_name)
+            logger.info(f"Downloaded model to {model_name}")
+        
+        if device is None:
+            device = best_available_device()
+
+        model = OmniGen.from_pretrained(model_name, dtype=torch.bfloat16, low_cpu_mem_usage=low_cpu_mem_usage)
         processor = OmniGenProcessor.from_pretrained(model_name)
 
-        if os.path.exists(os.path.join(model_name, "vae")):
-            vae = AutoencoderKL.from_pretrained(os.path.join(model_name, "vae"))
-        elif vae_path is not None:
-            vae = AutoencoderKL.from_pretrained(vae_path).to(device)
-        else:
+        if vae_path is None:
+            vae_path = os.path.join(model_name, "vae")
+        
+        if not os.path.exists(vae_path):
             logger.info(f"No VAE found in {model_name}, downloading stabilityai/sdxl-vae from HF")
-            vae = AutoencoderKL.from_pretrained("stabilityai/sdxl-vae").to(device)
+            vae_path = "stabilityai/sdxl-vae"
+            
+        vae = AutoencoderKL.from_pretrained(vae_path).to(device)
 
-        return cls(vae, model, processor)
+        return cls(vae, model, processor, device)
     
     def merge_lora(self, lora_path: str):
         model = PeftModel.from_pretrained(self.model, lora_path)
