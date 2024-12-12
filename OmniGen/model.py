@@ -201,7 +201,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         self.dtype = None
     
     @classmethod
-    def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = torch.bfloat16, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
+    def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = None, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
         model_path = Path(model_name)
         config_loc = model_name # these only diverge when model_name is *.safetensors or *.pt file
 
@@ -228,6 +228,9 @@ class OmniGen(nn.Module, PeftAdapterMixin):
                 torch.load(model_path, map_location='cpu'))
         
         config = Phi3Config.from_pretrained(config_loc)
+        # avoid inadvertently leaving the weights as float32
+        if dtype is None:
+            dtype = config.torch_dtype
 
         if hasattr(config, 'quantization_config'):
             if quantization_config is not None:
@@ -257,7 +260,9 @@ class OmniGen(nn.Module, PeftAdapterMixin):
             model = cls(config)
             model.load_state_dict(ckpt)
         
-        model.dtype = dtype
+        
+        # determine dtype via x_emb bias since as a Conv2d bias, it should never be quantized
+        model.dtype = model.x_embedder.proj.bias.dtype 
         
         del ckpt
         torch.cuda.empty_cache()

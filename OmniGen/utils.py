@@ -137,7 +137,7 @@ def quantize_bnb(meta_model, state_dict:dict, quantization_config:BitsAndBytesCo
     
     # iterate the model keys, otherwise quantized state dict will throws errors
     for param_name in model.state_dict():
-        param = state_dict.get(param_name)
+        param = state_dict[param_name]
         if not pre_quantized:
             param = param.to(dtype)
         

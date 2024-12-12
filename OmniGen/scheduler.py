@@ -1,10 +1,13 @@
+import copy
 from tqdm import tqdm
 from typing import Optional, Dict, Any, Tuple, List
 import gc
 
 import torch
 from transformers.cache_utils import Cache, DynamicCache, OffloadedCache
+from diffusers.utils import logging
 
+logger = logging.get_logger(__name__) 
 
 
 class OmniGenCache(DynamicCache):
@@ -121,8 +124,30 @@ class OmniGenScheduler:
         t = torch.linspace(0, 1, num_steps+1)
         t = t / (t + time_shifting_factor - time_shifting_factor * t)
         self.sigma = t
-
     
+    @torch.no_grad()
+    def _fp16_clip_autoset(self, model_llm, z, func, model_kwargs):
+        '''Recursively search for a minimal clipping value for fp16 stability'''
+        timesteps = torch.full(size=(len(z), ), fill_value=self.sigma[0], device=z.device)
+        _nan_expon = model_kwargs.pop('_nan_expon', None)
+        if _nan_expon is not None:
+            clip_val = 2**16 - 2**_nan_expon # fp16 overflows after ±2^16-32
+            model_llm.set_clip_val(clip_val)
+            
+        try:
+            _model_kwargs = copy.deepcopy(model_kwargs)
+            _model_kwargs['use_kv_cache']=False # no cache while searching
+            _, _ = func(z.clone(), timesteps, past_key_values=None, **_model_kwargs)
+        except OverflowError:
+            if _nan_expon is None:
+                logger.info('FP16 overflow, searching for clamp bounds...')
+                _nan_expon = 5 # start at 2**5
+            
+            if _nan_expon < 15: # stop at 2**15 
+                model_kwargs['_nan_expon'] = _nan_expon+1
+                return self._fp16_clip_autoset(model_llm, z, func, model_kwargs)
+            raise OverflowError('Numerical overflow, unable to find suitable clipping bounds.')
+            
     def crop_kv_cache(self, past_key_values, num_tokens_for_img):
         # return 
         crop_past_key_values = ()
