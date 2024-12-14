@@ -34,6 +34,7 @@
 
 
 ## 1. News
+- 2024-12-14:🚀️🚀️Open-source [X2I Dataset](https://huggingface.co/collections/yzwang/x2i-dataset-674c66d1d700f7f816a9590d)
 - 2024-11-03:✨✨Added Replicate Demo and API: [![Replicate](https://replicate.com/chenxwh/omnigen/badge)](https://replicate.com/chenxwh/omnigen)
 - 2024-10-28:✨✨We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22:🔥🔥We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
