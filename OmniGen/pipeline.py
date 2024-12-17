@@ -318,7 +318,9 @@ class OmniGenPipeline:
 
         scheduler = OmniGenScheduler(num_steps=num_inference_steps)
         if latents.dtype == torch.float16:
-            # fp16 overflows at ±2^16-32, but the actual clamp value may have to be lower to maintain decoder layer stability
+            # Continue to monitor. If _clip_val never changes, can remove scheduler autoset func and just hardcode clip val here.
+            #self.model.llm.set_clip_val(2**16-32 - 2*32) # hardcode clip val
+            # dry run the inputs, adjusting the clip bounds as necessary
             scheduler._fp16_clip_autoset(self.model.llm, latents, func, model_kwargs)
         samples = scheduler(latents, func, model_kwargs, use_kv_cache=use_kv_cache, offload_kv_cache=offload_kv_cache)
         samples = samples.chunk((1+num_cfg), dim=0)[0]
