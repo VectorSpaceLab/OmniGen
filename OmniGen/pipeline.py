@@ -154,6 +154,7 @@ class OmniGenPipeline:
         dtype: torch.dtype = torch.bfloat16,
         seed: int = None,
         output_type: str = "pil",
+        num_images: int = 1,
         ):
         r"""
         Function invoked when calling the pipeline for generation.
