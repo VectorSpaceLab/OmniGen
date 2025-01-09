@@ -193,6 +193,8 @@ class OmniGenPipeline:
                 data type for the model
             output_type (`str`, *optional*, defaults to "pil"):
                 The type of the output image, which can be "pt" or "pil"
+            num_images (`int`, *optional*, defaults to 1):
+                The number of images to generate
         Examples:
 
         Returns:
