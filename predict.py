@@ -122,6 +122,7 @@ class Predictor(BasePredictor):
                 use_input_image_size_as_output=use_input_image_size_as_output,
                 seed=seed,
                 max_input_image_size=max_input_image_size,
+                num_images=num_images,
             )
             img = output[0]
             out_path = f"/tmp/out_{i}.png"
