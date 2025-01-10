@@ -154,7 +154,6 @@ class OmniGenPipeline:
         dtype: torch.dtype = torch.bfloat16,
         seed: int = None,
         output_type: str = "pil",
-        num_images: int = 1,
         ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -193,8 +192,6 @@ class OmniGenPipeline:
                 data type for the model
             output_type (`str`, *optional*, defaults to "pil"):
                 The type of the output image, which can be "pt" or "pil"
-            num_images (`int`, *optional*, defaults to 1):
-                The number of images to generate
         Examples:
 
         Returns:

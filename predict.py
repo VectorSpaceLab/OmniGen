@@ -97,7 +97,7 @@ class Predictor(BasePredictor):
             description="Automatically adjust the output image size to be same as input image size. For editing and controlnet task, it can make sure the output image has the same size as input image leading to better performance",
             default=False,
         ),
-        num_images: int = Input(description="The number of images to generate for the given inputs", default=1, ge=1, le=10),
+        num_images_per_prompt: int = Input(description="The number of images to generate for the given inputs", default=1, ge=1, le=10),
     ) -> List[Path]:
         """Run a single prediction on the model"""
         if seed is None:
@@ -106,7 +106,7 @@ class Predictor(BasePredictor):
 
         input_images = [str(img) for img in [img1, img2, img3] if img is not None]
         output = []
-        for i in range(num_images):
+        for i in range(num_images_per_prompt):
             output = self.pipe(
                 prompt=prompt,
                 input_images=None if len(input_images) == 0 else input_images,
@@ -121,8 +121,7 @@ class Predictor(BasePredictor):
                 offload_model=offload_model,
                 use_input_image_size_as_output=use_input_image_size_as_output,
                 seed=seed,
-                max_input_image_size=max_input_image_size,
-                num_images=num_images,
+                max_input_image_size=max_input_image_size
             )
             img = output[0]
             out_path = f"/tmp/out_{i}.png"
