@@ -105,7 +105,7 @@ class Predictor(BasePredictor):
         print(f"Using seed: {seed}")
 
         input_images = [str(img) for img in [img1, img2, img3] if img is not None]
-        output = []
+        outputs = []
         for i in range(num_images_per_prompt):
             output = self.pipe(
                 prompt=prompt,
@@ -126,5 +126,5 @@ class Predictor(BasePredictor):
             img = output[0]
             out_path = f"/tmp/out_{i}.png"
             img.save(out_path)
-            output.append(Path(out_path))
-        return output
+            outputs.append(Path(out_path))
+        return outputs
