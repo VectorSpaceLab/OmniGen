@@ -32,6 +32,7 @@
 </h4>
 
 
+**We are hiring FTE researchers and interns! If you are interested in working with us on Vision Generation Models, please concat us: ```2906698981@qq.com```!**
 
 ## 1. News
 - 2024-12-14:🚀️🚀️Open-source [X2I Dataset](https://huggingface.co/collections/yzwang/x2i-dataset-674c66d1d700f7f816a9590d)
