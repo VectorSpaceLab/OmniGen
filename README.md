@@ -40,7 +40,7 @@
 - 2024-10-28:✨✨We release new version of inference code, optimizing the memory usage and time cost. You can refer to [docs/inference.md](docs/inference.md#requiremented-resources) for detailed information.
 - 2024-10-22:🔥🔥We release the code for OmniGen. Inference: [docs/inference.md](docs/inference.md) Train: [docs/fine-tuning.md](docs/fine-tuning.md) 
 - 2024-10-22:🔥🔥We release the first version of OmniGen. Model Weight: [Shitao/OmniGen-v1](https://huggingface.co/Shitao/OmniGen-v1) HF Demo: [🤗](https://huggingface.co/spaces/Shitao/OmniGen)  
-- 2024-09-17:🚀️🚀️We release the OmniGen Paper: [ArXiv](https://arxiv.org/abs/2409.11340)  
+- 2024-09-17:⚡️⚡️We release the first OmniGen Report: [ArXiv](https://arxiv.org/abs/2409.11340)  
 
 
 ## 2. Overview
