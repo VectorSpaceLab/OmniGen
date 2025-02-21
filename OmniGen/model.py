@@ -1,5 +1,8 @@
 # The code is revised from DiT
 import os
+import gc
+import warnings
+from pathlib import Path
 import torch
 import torch.nn as nn
 import numpy as np
@@ -7,12 +10,18 @@ import math
 from typing import Dict
 
 from diffusers.loaders import PeftAdapterMixin
+from diffusers.utils import logging
 from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
 from huggingface_hub import snapshot_download
 from safetensors.torch import load_file
+from accelerate import init_empty_weights
+from transformers import BitsAndBytesConfig
 
 from OmniGen.transformer import Phi3Config, Phi3Transformer
+from OmniGen.utils import quantize_bnb
 
+
+logger = logging.get_logger(__name__) 
 
 def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
@@ -162,6 +171,7 @@ class OmniGen(nn.Module, PeftAdapterMixin):
         pos_embed_max_size: int = 192,
     ):
         super().__init__()
+        self.config = transformer_config
         self.in_channels = in_channels
         self.out_channels = in_channels
         self.patch_size = patch_size
@@ -185,22 +195,78 @@ class OmniGen(nn.Module, PeftAdapterMixin):
 
         self.llm = Phi3Transformer(config=transformer_config)
         self.llm.config.use_cache = False
+
+        # bnb quantized models cannot easily be offloaded or recast
+        self.quantized = False
+        self.dtype = None
     
     @classmethod
-    def from_pretrained(cls, model_name):
-        if not os.path.exists(model_name):
-            cache_folder = os.getenv('HF_HUB_CACHE')
-            model_name = snapshot_download(repo_id=model_name,
-                                           cache_dir=cache_folder,
-                                           ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
-        config = Phi3Config.from_pretrained(model_name)
-        model = cls(config)
-        if os.path.exists(os.path.join(model_name, 'model.safetensors')):
-            print("Loading safetensors")
-            ckpt = load_file(os.path.join(model_name, 'model.safetensors'))
+    def from_pretrained(cls, model_name: str|os.PathLike, dtype: torch.dtype = None, quantization_config: BitsAndBytesConfig = None, low_cpu_mem_usage: bool = True,):
+        model_path = Path(model_name)
+        config_loc = model_name # these only diverge when model_name is *.safetensors or *.pt file
+
+        if model_path.exists():
+            if model_path.is_dir():
+                if (weights_loc := list(model_path.glob('*.safetensors'))):
+                    model_path = weights_loc[0]
+                elif (weights_loc := list(model_path.glob('*.pt'))):
+                    model_path = weights_loc[0]
+                else:
+                    raise FileNotFoundError(f'No .safetensors or .pt model weights found in {model_path.as_posix()!r}')
+            else:
+                logger.info("Loading model weights from file. Using default config from 'Shitao/OmniGen-v1'.")
+                config_loc = "Shitao/OmniGen-v1"
         else:
-            ckpt = torch.load(os.path.join(model_name, 'model.pt'), map_location='cpu')
-        model.load_state_dict(ckpt)
+            cache_folder = os.getenv('HF_HUB_CACHE')
+            model_path = snapshot_download(repo_id=model_name, cache_dir=cache_folder,
+                                                ignore_patterns=['flax_model.msgpack', 'rust_model.ot', 'tf_model.h5'])
+            
+            # assume hub files are always .safetensors
+            model_path = next(Path(model_path).glob('*.safetensors'))
+        
+        ckpt = (load_file(model_path, 'cpu') if model_path.suffix == '.safetensors' else 
+                torch.load(model_path, map_location='cpu'))
+        
+        config = Phi3Config.from_pretrained(config_loc)
+        # avoid inadvertently leaving the weights as float32
+        if dtype is None:
+            dtype = config.torch_dtype
+
+        if hasattr(config, 'quantization_config'):
+            if quantization_config is not None:
+                # from: diffusers.quantizers.auto
+                warnings.warn(
+                    "You passed `quantization_config` or equivalent parameters to `from_pretrained` but the model you're loading"
+                    " already has a `quantization_config` attribute. The `quantization_config` from the model will be used."
+                )
+            
+            config.quantization_config.pop("quant_method",None) # prevent unused keys warning
+            quantization_config = BitsAndBytesConfig.from_dict(config.quantization_config)
+
+        if low_cpu_mem_usage:
+            with init_empty_weights():
+                model = cls(config)
+            
+            if quantization_config:
+                model = quantize_bnb(model, ckpt, quantization_config=quantization_config, dtype=dtype)
+                model.quantized = True
+                model.config.quantization_config = quantization_config
+            else:
+                model.load_state_dict(ckpt, assign=True)
+        else:
+            if quantization_config:
+                raise ValueError('Quantization not supported for `low_cpu_mem_usage=False`.')
+            
+            model = cls(config)
+            model.load_state_dict(ckpt)
+        
+        
+        # determine dtype via x_emb bias since as a Conv2d bias, it should never be quantized
+        model.dtype = model.x_embedder.proj.bias.dtype 
+        
+        del ckpt
+        torch.cuda.empty_cache()
+        gc.collect()
         return model
 
     def initialize_weights(self):

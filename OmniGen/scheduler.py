@@ -1,10 +1,13 @@
+import copy
 from tqdm import tqdm
 from typing import Optional, Dict, Any, Tuple, List
 import gc
 
 import torch
 from transformers.cache_utils import Cache, DynamicCache, OffloadedCache
+from diffusers.utils import logging
 
+logger = logging.get_logger(__name__) 
 
 
 class OmniGenCache(DynamicCache):
@@ -121,8 +124,43 @@ class OmniGenScheduler:
         t = torch.linspace(0, 1, num_steps+1)
         t = t / (t + time_shifting_factor - time_shifting_factor * t)
         self.sigma = t
-
     
+    @torch.no_grad()
+    def _fp16_clip_autoset(self, model_llm, z, func, model_kwargs):
+        '''Recursively search for a minimal clipping value for fp16 stability'''
+        fp16_max_repr = torch.finfo(torch.float16).max # fp16 max representable: ±2^16-32
+        timesteps = torch.full(size=(len(z), ), fill_value=self.sigma[0], device=z.device)
+        _buff_expon = model_kwargs.pop('_buff_expon', None) # temp local recursion var
+        
+        if _buff_expon is None:
+            # fp16 overflows at ±2^16-16 with largest repr being ±2^16-32. repr vals occur at intervals of 32 for nums > 2^15.
+            # Prelim tests show an additional buffer of at least 2 repr values is needed for stability; why is presently unclear.
+            # If this continues to hold true, this function can be deleted and replaced with 1 line in pipeline.
+            clip_val = fp16_max_repr - 2*32 # = 2**6 = (-2,+2 buffer vals)
+            if model_llm._clip_val is None or model_llm._clip_val > clip_val:
+                model_llm.set_clip_val(clip_val)
+                logger.debug(f'set initial clamp: (+-){clip_val} ...')
+        else:
+            clip_val = fp16_max_repr - 2**_buff_expon
+            model_llm.set_clip_val(clip_val) # clamp (-clip_val, +clip_val)
+            
+        try:
+            _model_kwargs = copy.deepcopy(model_kwargs)
+            _model_kwargs['use_kv_cache']=False # no cache while searching
+            _, _ = func(z.clone(), timesteps, past_key_values=None, **_model_kwargs)
+        except OverflowError:
+            if _buff_expon is None:
+                _buff_expon = 6 # start at 2**(6 + 1) (-4,+4 buffer vals)
+                logger.info('FP16 overflow, searching for clamp bounds...')
+                
+            if _buff_expon < 15: # stop at 2**15 (-1024,+1024 buffer vals)
+                _buff_expon += 1
+                # each iter, double the representable value buffer capacity for both min and max
+                model_kwargs['_buff_expon'] = _buff_expon
+                logger.debug(f'trying clamp: (+-){fp16_max_repr - 2**(_buff_expon)} ...')
+                return self._fp16_clip_autoset(model_llm, z, func, model_kwargs)
+            raise OverflowError('Numerical overflow, unable to find suitable clipping bounds.')
+            
     def crop_kv_cache(self, past_key_values, num_tokens_for_img):
         # return 
         crop_past_key_values = ()
