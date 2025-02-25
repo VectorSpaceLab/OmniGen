@@ -37,8 +37,8 @@ class OmniGenCache(DynamicCache):
                 prev_layer_idx = -1
             else:
                 prev_layer_idx = (layer_idx - 1) % len(self)
-            self.key_cache[prev_layer_idx] = self.key_cache[prev_layer_idx].to("cpu", non_blocking=True)
-            self.value_cache[prev_layer_idx] = self.value_cache[prev_layer_idx].to("cpu", non_blocking=True)
+            self.key_cache[prev_layer_idx] = self.key_cache[prev_layer_idx].to("cpu")
+            self.value_cache[prev_layer_idx] = self.value_cache[prev_layer_idx].to("cpu")
 
 
     def __getitem__(self, layer_idx: int) -> List[Tuple[torch.Tensor]]:
@@ -49,9 +49,9 @@ class OmniGenCache(DynamicCache):
                 torch.cuda.current_stream().synchronize()
                 self.evict_previous_layer(layer_idx)
                 # Load current layer cache to its original device if not already there
-                original_device = self.original_device[layer_idx]
+                #original_device = self.original_device[layer_idx]
                 # self.prefetch_stream.synchronize(original_device)
-                torch.cuda.synchronize(self.prefetch_stream)
+                self.prefetch_stream.synchronize()
                 key_tensor = self.key_cache[layer_idx]
                 value_tensor = self.value_cache[layer_idx]
                 
