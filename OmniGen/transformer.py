@@ -29,6 +29,11 @@ class Phi3Transformer(Phi3Model):
     Args:
         config: Phi3Config
     """
+    _clip_val: float = None  # fp16: ~ (2**16 - 2**7)
+
+    def set_clip_val(self, clip_val:float=None):
+        self._clip_val = abs(clip_val)
+
     def prefetch_layer(self, layer_idx: int, device: torch.device):
         "Starts prefetching the next layer cache"
         with torch.cuda.stream(self.prefetch_stream):
@@ -42,7 +47,7 @@ class Phi3Transformer(Phi3Model):
         for name, param in self.layers[prev_layer_idx].named_parameters():
             param.data = param.data.to("cpu", non_blocking=True)
             
-    def get_offlaod_layer(self, layer_idx: int, device: torch.device):
+    def get_offload_layer(self, layer_idx: int, device: torch.device):
         # init stream
         if not hasattr(self, "prefetch_stream"):
             self.prefetch_stream = torch.cuda.Stream()
@@ -137,6 +142,8 @@ class Phi3Transformer(Phi3Model):
         for decoder_layer in self.layers:
             layer_idx += 1
 
+            if self._clip_val is not None:
+                hidden_states.clamp_(-self._clip_val, self._clip_val)
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
@@ -153,7 +160,7 @@ class Phi3Transformer(Phi3Model):
                 )
             else:
                 if offload_model and not self.training:
-                    self.get_offlaod_layer(layer_idx, device=inputs_embeds.device)
+                    self.get_offload_layer(layer_idx, device=inputs_embeds.device)
                 layer_outputs = decoder_layer(
                     hidden_states,
                     attention_mask=attention_mask,
@@ -173,7 +180,8 @@ class Phi3Transformer(Phi3Model):
                 all_self_attns += (layer_outputs[1],)
 
         hidden_states = self.norm(hidden_states)
-
+        if hidden_states.isnan().any():
+            raise OverflowError('Numerical Overflow: hidden states NaNs')
         # add hidden states from the last decoder layer
         if output_hidden_states:
             all_hidden_states += (hidden_states,)
