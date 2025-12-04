@@ -31,9 +31,6 @@
     <p>
 </h4>
 
-
-**We are hiring FTE researchers and interns! If you are interested in working with us on Vision Generation Models, please concat us: ```2906698981@qq.com```!**
-
 ## 1. News
 
 - 2025-06-16:🔥🔥OmniGen2 is released at https://github.com/VectorSpaceLab/OmniGen2. Welcome to use and give some feedback.
